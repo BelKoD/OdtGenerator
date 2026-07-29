@@ -6,7 +6,7 @@ use BelKoD\OdtGenerator\HtmlTags\TagHandler;
 use BelKoD\OdtGenerator\Exception\ValidationException;
 use BelKoD\OdtGenerator\Exception\IOException;
 
-class OdtGenerator
+class OdtGenerator implements OdtGeneratorInterface
 {
     /**
      * @var string HTML-содержимое для обработки
@@ -57,6 +57,7 @@ class OdtGenerator
      * @var array Массив добавленных директорий
      */
     private $added_dir = ['Pictures'];
+    
     /**
      * Конструктор
      *
