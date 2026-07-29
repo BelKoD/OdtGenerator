@@ -70,10 +70,12 @@ class ImgHandler extends TagHandler
     {
         $styleName = $this->style($node, ['forParagraph' => true, 'parentStyleName' => 'StandardParagraph']);
 
-        // Получаем размеры изображения
-        $imgSize = @getimagesize($imagePath);
+        // Получаем размеры изображения с обработкой ошибок
+        $imgSize = getimagesize($imagePath);
         $width = $height = null;
-        if ($imgSize) {
+        if ($imgSize === false) {
+            error_log("Failed to get image size for: {$imagePath}");
+        } else {
             $width = $imgSize[0];
             $height = $imgSize[1];
         }
@@ -151,28 +153,59 @@ class ImgHandler extends TagHandler
                     'user_agent' => 'ODT-Generator/1.0'
                 ]
             ]);
-            $data = @file_get_contents($src, false, $context);
-            if ($data !== false) {
-                file_put_contents($localPath, $data);
+            
+            try {
+                $data = file_get_contents($src, false, $context);
+                if ($data === false) {
+                    error_log("Failed to download image from URL: {$src}");
+                    return null;
+                }
+                
+                $writeResult = file_put_contents($localPath, $data);
+                if ($writeResult === false) {
+                    error_log("Failed to save downloaded image to: {$localPath}");
+                    return null;
+                }
+                
                 return $localPath;
+            } catch (\Exception $e) {
+                error_log("Error downloading image from {$src}: " . $e->getMessage());
+                return null;
             }
-            return null;
         }
 
         // Относительный путь — предполагаем, что путь от корня проекта
-        $basePath = GAR_PATH_ROOT ?? getcwd();
-        $fullPath = realpath($basePath . '/' . ltrim($src, '/'));
-
+        $basePath = getcwd();
+        $normalizedSrc = ltrim($src, '/');
+        
+        // Защита от path traversal: убеждаемся, что путь не выходит за пределы basePath
+        $fullPath = realpath($basePath . '/' . $normalizedSrc);
+        
         if ($fullPath && file_exists($fullPath)) {
-            return $fullPath;
+            // Проверяем, что реальный путь начинается с basePath (защита от ../)
+            $realBasePath = realpath($basePath);
+            if ($realBasePath && strpos($fullPath, $realBasePath) === 0) {
+                return $fullPath;
+            }
+            error_log("Path traversal attempt detected for: {$src}");
+            return null;
         }
 
         // Если не найдено — пробуем относительно текущего скрипта
-        $fullPath = realpath(dirname(__FILE__) . '/../' . $src);
-        if ($fullPath && file_exists($fullPath)) {
-            return $fullPath;
+        $scriptBasePath = realpath(dirname(__FILE__) . '/../..');
+        if ($scriptBasePath) {
+            $fullPath = realpath($scriptBasePath . '/' . $normalizedSrc);
+            if ($fullPath && file_exists($fullPath)) {
+                // Проверяем, что реальный путь начинается с scriptBasePath
+                if (strpos($fullPath, $scriptBasePath) === 0) {
+                    return $fullPath;
+                }
+                error_log("Path traversal attempt detected for: {$src}");
+                return null;
+            }
         }
 
+        error_log("Image not found: {$src}");
         return null;
     }
 }

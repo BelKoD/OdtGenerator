@@ -1,0 +1,72 @@
+```php
+# Compiled and build artifacts
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
+__pycache__/
+*.pyo
+*.pyd
+
+# Dependencies
+node_modules/
+vendor/
+composer.lock
+*.lock
+.env
+.env.local
+.env.*
+
+# Build directories
+dist/
+build/
+target/
+coverage/
+htmlcov/
+*.egg-info/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.log
+Thumbs.db
+.DS_Store
+.gitattributes
+
+# Testing and coverage
+.coverage
+.mypy_cache/
+.pytest_cache/
+.nyc_output/
+istanbul.out
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+Network Trash Folder
+Temporary Items
+apfs_sync_marker_bhobbumw
+apfs_sync_marker_*
+
+# Logs
+*.log
+
+# Environment specific
+.env
+.env.local
+.env.*
+!.env.example
+```
