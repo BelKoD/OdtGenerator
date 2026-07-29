@@ -1,1 +1,27 @@
-(src/OdtArchiver.php, src/OdtArchiverInterface.php)
+```
+# Test artifacts
+tests/*.pyc
+*.pyc
+__pycache__/
+
+# Dependencies
+vendor/
+composer.lock
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```
