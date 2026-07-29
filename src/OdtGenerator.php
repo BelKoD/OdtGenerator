@@ -44,9 +44,14 @@ class OdtGenerator implements OdtGeneratorInterface
     private $defaultCellPadding = null;
     
     /**
-     * @var StyleGenerator Генератор стилей
+     * @var StyleGeneratorInterface Генератор стилей
      */
     private $styleGenerator;
+    
+    /**
+     * @var OdtArchiverInterface Архиватор ODT файлов
+     */
+    private $archiver;
     
     /**
      * @var array Массив мастер-стилей
@@ -63,10 +68,11 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @param string $html HTML-содержимое для обработки
      * @param string $outputFile Имя выходного файла, например "document.odt"
+     * @param OdtArchiverInterface|null $archiver Архиватор (по умолчанию создается новый)
      * @throws IOException
      * @throws ValidationException
      */
-    public function __construct(string $html, string $outputFile)
+    public function __construct(string $html, string $outputFile, ?OdtArchiverInterface $archiver = null)
     {
         // Валидация входных данных
         if (empty($html)) {
@@ -102,6 +108,7 @@ class OdtGenerator implements OdtGeneratorInterface
 
         $this->styleGenerator = new StyleGenerator($this);
         $this->factory = new TagHandlerFactory($this, $this->styleGenerator);
+        $this->archiver = $archiver ?? new OdtArchiver();
     }
 
     /**
@@ -380,78 +387,71 @@ class OdtGenerator implements OdtGeneratorInterface
      */
     private function createODTFile(string $contentXml)
     {
-        $zip = new \ZipArchive();
-        if ($zip->open($this->outputPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            throw new IOException("Не удалось создать файл: " . $this->outputPath);
-        }
+        // Подготавливаем файлы для архива
+        $files = [
+            'mimetype' => 'application/vnd.oasis.opendocument.text',
+            'META-INF/manifest.xml' => $this->buildManifest(),
+            'content.xml' => $contentXml,
+            'source.xml' => file_get_contents($this->tempDir.'/source.xml')
+        ];
 
-        // mimetype (должен быть первым и не сжатым!)
-        $zip->addFromString('mimetype', 'application/vnd.oasis.opendocument.text');
-        $zip->setCompressionIndex(0, \ZipArchive::CM_STORE);
-
-        $sub_manifest = '';
-        // добавляем дополнительные каталоги
+        // Подготавливаем директории для архива
+        $directories = [];
         foreach ($this->added_dir as $target) {
-            $add_dir = $this->tempDir . '/' .$target;
-            if (is_dir($add_dir)) {
-                //$this->addDirectoryToZip($zip, $add_dir, $dir);
-                $iterator = new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($add_dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-                    \RecursiveIteratorIterator::SELF_FIRST
-                );
-
-                foreach ($iterator as $file) {
-                    $filePath = $file->getPathname();
-                    $relativePath = substr($filePath, strlen($add_dir) + 1);
-                    $archivePath = $target . '/' . $relativePath;
-
-                    if ($file->isDir()) {
-                        // Папки добавлять не нужно — ZipArchive добавит автоматически при добавлении файлов
-                        continue;
-                    }
-
-                    $mimeType = $this->getImageMimeType($filePath);
-                    $sub_manifest .= '<manifest:file-entry manifest:full-path="' . $archivePath . '" manifest:media-type="' . $mimeType . '"/>' . "\n";
-
-                    $zip->addFile($filePath, $archivePath);
-                }
+            $addDir = $this->tempDir . '/' . $target;
+            if (is_dir($addDir)) {
+                $directories[] = [
+                    'source' => $addDir,
+                    'target' => $target
+                ];
             }
         }
 
-        // META-INF/manifest.xml
+        // Создаем архив с помощью делегированного класса
+        $this->archiver->createArchive($this->outputPath, $files, $directories);
+    }
+
+    /**
+     * Строит XML манифеста
+     *
+     * @return string XML манифеста
+     */
+    private function buildManifest(): string
+    {
+        $subManifest = '';
+        
+        // Добавляем записи манифеста для дополнительных директорий
+        foreach ($this->added_dir as $target) {
+            $addDir = $this->tempDir . '/' . $target;
+            if (!is_dir($addDir)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($addDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($iterator as $file) {
+                if ($file->isDir()) {
+                    continue;
+                }
+
+                $filePath = $file->getPathname();
+                $relativePath = substr($filePath, strlen($addDir) + 1);
+                $archivePath = $target . '/' . $relativePath;
+                $mimeType = $this->archiver->getMimeType($filePath);
+                $subManifest .= '<manifest:file-entry manifest:full-path="' . $archivePath . '" manifest:media-type="' . $mimeType . '"/>' . "\n";
+            }
+        }
+
         $manifest = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $manifest .= '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">' . "\n";
         $manifest .= '<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>' . "\n";
         $manifest .= '<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>' . "\n";
-        $manifest .= $sub_manifest;
+        $manifest .= $subManifest;
         $manifest .= '</manifest:manifest>';
-        $zip->addFromString('META-INF/manifest.xml', $manifest);
 
-        // content.xml
-        $zip->addFromString('content.xml', $contentXml);
-
-        // source.xml исходный xml на основе обрабатываемого html, структуру документа не нарушает, только для диагностики
-        $zip->addFromString('source.xml', file_get_contents($this->tempDir.'/source.xml'));
-
-
-        // styles.xml
-        //$zip->addFromString('styles.xml', $this->buildStylesXml());
-
-        $zip->close();
-    }
-
-    /**
-     * Возвращает тип файла.
-     *
-     * @param string $filePath Путь к файлу
-     * @return string
-     */
-    private function getImageMimeType(string $filePath): string
-    {
-        $mime = mime_content_type($filePath);
-        if ($mime === 'image/svg') {
-            return 'image/svg+xml';
-        }
-        return $mime ?: 'application/octet-stream';
+        return $manifest;
     }
 }
