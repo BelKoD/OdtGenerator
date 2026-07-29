@@ -6,16 +6,54 @@ use BelKoD\OdtGenerator\HtmlTags\TagHandler;
 
 class OdtGenerator
 {
+    /**
+     * @var string HTML-содержимое для обработки
+     */
     private $html;
+    
+    /**
+     * @var string Имя выходного файла
+     */
     private $outputPath;
-    private $tempDir; // Сохраняем ссылку на временную директорию, если понадобится очистка
+    
+    /**
+     * @var string Путь к временной директории
+     */
+    private $tempDir;
+    
+    /**
+     * @var TagHandlerFactory Фабрика обработчиков тегов
+     */
     private $factory;
+    
+    /**
+     * @var array Массив автоматических стилей
+     */
     private $automaticStyles = [];
+    
+    /**
+     * @var string|null Граница по умолчанию
+     */
     private $defaultBorder = null;
+    
+    /**
+     * @var string|null Отступ ячеек по умолчанию
+     */
     private $defaultCellPadding = null;
-    /* @var StyleGenerator */
+    
+    /**
+     * @var StyleGenerator Генератор стилей
+     */
     private $styleGenerator;
+    
+    /**
+     * @var array Массив мастер-стилей
+     */
     private $masterStyles = [];
+    
+    /**
+     * @var array Массив добавленных директорий
+     */
     private $added_dir = ['Pictures'];
     /**
      * Конструктор
@@ -104,27 +142,58 @@ class OdtGenerator
         return $this->styleGenerator->getGlobalSettings();
     }
 
-    public function setDefaultBorder($border)
+    /**
+     * Устанавливает границу по умолчанию
+     *
+     * @param string|null $border Граница (например, "1pt solid #000")
+     * @return self
+     */
+    public function setDefaultBorder($border): self
     {
         $this->defaultBorder = $border;
+        return $this;
     }
 
-    public function getDefaultBorder()
+    /**
+     * Возвращает границу по умолчанию
+     *
+     * @return string|null
+     */
+    public function getDefaultBorder(): ?string
     {
         return $this->defaultBorder;
     }
 
-    public function addAutomaticStyle($styleXml)
+    /**
+     * Добавляет автоматический стиль
+     *
+     * @param string $styleXml XML-строка стиля
+     * @return self
+     */
+    public function addAutomaticStyle(string $styleXml): self
     {
         $this->automaticStyles[] = $styleXml;
+        return $this;
     }
 
-    public function setDefaultCellPadding($padding)
+    /**
+     * Устанавливает отступ ячеек по умолчанию
+     *
+     * @param string|null $padding Отступ (например, "0.1cm")
+     * @return self
+     */
+    public function setDefaultCellPadding($padding): self
     {
         $this->defaultCellPadding = $padding;
+        return $this;
     }
 
-    public function getDefaultCellPadding()
+    /**
+     * Возвращает отступ ячеек по умолчанию
+     *
+     * @return string|null
+     */
+    public function getDefaultCellPadding(): ?string
     {
         return $this->defaultCellPadding;
     }
@@ -138,11 +207,16 @@ class OdtGenerator
     }
 
     /**
-     * @param string $masterStyles
+     * Устанавливает мастер-стили
+     *
+     * @param string $masterStyles XML-строка мастер-стилей
+     * @param string $type Тип мастер-стиля (например, 'header', 'footer')
+     * @return self
      */
-    public function setMasterStyles(string $masterStyles, $type = 'header')
+    public function setMasterStyles(string $masterStyles, string $type = 'header'): self
     {
         $this->masterStyles[$type][] = $masterStyles;
+        return $this;
     }
 
     /**
