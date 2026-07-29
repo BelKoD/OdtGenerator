@@ -52,7 +52,19 @@ class OdtGenerator
         $this->automaticStyles = []; // сброс при генерации
         $html = str_replace(["\n", "\r"],'', $this->html);
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NODEFDTD);
+        
+        // Обрабатываем ошибки загрузки HTML явно
+        libxml_use_internal_errors(true);
+        $result = $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NODEFDTD);
+        $errors = libxml_get_errors();
+        libxml_clear_errors();
+        
+        if (!$result && !empty($errors)) {
+            $errorMessages = array_map(function($error) {
+                return "Line {$error->line}: {$error->message}";
+            }, $errors);
+            error_log("HTML parsing errors: " . implode("; ", $errorMessages));
+        }
 
         $xml = $dom->saveXML();
         file_put_contents($this->tempDir.'/source.xml', $xml);
@@ -208,14 +220,22 @@ class OdtGenerator
     /**
      * Возвращает содержимое созданного ODT документа
      *
-     * @return string
+     * @return string|null
+     * @throws \Exception
      */
-    public function getOutputFile(): string
+    public function getOutputFile(): ?string
     {
-        $content = null;
-        if (file_exists($this->outputPath)) {
-            $content = @file_get_contents($this->outputPath);
+        if (!file_exists($this->outputPath)) {
+            error_log("ODT file not found: {$this->outputPath}");
+            return null;
         }
+        
+        $content = file_get_contents($this->outputPath);
+        if ($content === false) {
+            error_log("Failed to read ODT file: {$this->outputPath}");
+            throw new \Exception("Не удалось прочитать файл: {$this->outputPath}");
+        }
+        
         return $content;
     }
 
