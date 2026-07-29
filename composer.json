@@ -1,0 +1,33 @@
+{
+  "name": "belkod/odt-generator",
+  "description": "ODT generator from html.",
+  "minimum-stability": "dev",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Belokopytov Konstantin",
+      "email": "dr.belkod@yandex.ru",
+      "homepage": "https://belkod.ru"
+    }
+  ],
+  "require": {
+    "php": ">=7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "ext-intl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "BelKoD\\OdtGenerator\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "BelKoD\\OdtGenerator\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit"
+  }
+}

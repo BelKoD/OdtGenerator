@@ -1,0 +1,117 @@
+<!-- Тестовый HTML файл для проверки генерации ODT -->
+<!-- Содержит текст с форматированием, таблицы с разными ячейками, вложенные таблицы -->
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <strong>Sed do eiusmod tempor</strong> incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. <em>Excepteur sint occaecat cupidatat</em> non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+<h2>Таблица с различной шириной ячеек</h2>
+
+<table>
+    <tr>
+        <td width="5cm">Колонка 1 (5cm)</td>
+        <td style="width:10cm;">Колонка 2 (10cm)</td>
+        <td width="7cm">Колонка 3 (7cm)</td>
+    </tr>
+    <tr>
+        <td>Ячейка 1-1</td>
+        <td>Ячейка 1-2 с более длинным текстом для проверки переноса слов</td>
+        <td>Ячейка 1-3</td>
+    </tr>
+    <tr>
+        <td>Ячейка 2-1</td>
+        <td>Ячейка 2-2</td>
+        <td>Ячейка 2-3</td>
+    </tr>
+</table>
+
+<h2>Таблица с объединёнными ячейками</h2>
+
+<table>
+    <tr>
+        <td width="6cm" colspan="2">Объединённая ячейка (colspan=2, 6cm)</td>
+        <td style="width:8cm;">Колонка 3 (8cm)</td>
+    </tr>
+    <tr>
+        <td>Ячейка 1-1</td>
+        <td>Ячейка 1-2</td>
+        <td>Ячейка 1-3</td>
+    </tr>
+    <tr>
+        <td rowspan="2">Вертикально объединённая</td>
+        <td>Ячейка 2-2</td>
+        <td>Ячейка 2-3</td>
+    </tr>
+    <tr>
+        <td>Ячейка 3-2</td>
+        <td>Ячейка 3-3</td>
+    </tr>
+</table>
+
+<h2>Вложенная таблица</h2>
+
+<table>
+    <tr>
+        <td width="15cm">
+            <p>Внешняя таблица - ячейка 1</p>
+            <table>
+                <tr>
+                    <td width="4cm" style="background-color:#f0f0f0;">Внутренняя 1-1</td>
+                    <td style="width:6cm;">Внутренняя 1-2</td>
+                </tr>
+                <tr>
+                    <td>Внутренняя 2-1</td>
+                    <td>Внутренняя 2-2</td>
+                </tr>
+            </table>
+        </td>
+        <td style="width:8cm;">Внешняя таблица - ячейка 2</td>
+    </tr>
+    <tr>
+        <td>Внешняя таблица - ячейка 3</td>
+        <td>Внешняя таблица - ячейка 4</td>
+    </tr>
+</table>
+
+<h2>Текст на кириллице</h2>
+
+<p>Ло́рем ипсу́м (лат. Lorem ipsum) — это текст-«рыба», часто используемый в печати и веб-дизайне. Lorem ipsum является стандартной «рыбой» для текстов на латинице с начала XVI века.</p>
+
+<p>В настоящее время существуют различные вариации текста Lorem ipsum, но большинство из них имеет одно и то же происхождение. Текст представляет собой искаженный отрывок из философского трактата Цицерона «О пределах добра и зла», написанного в 45 году до нашей эры на латинском языке.</p>
+
+<ul>
+    <li>Первый элемент списка</li>
+    <li>Второй элемент списка с <strong>жирным текстом</strong></li>
+    <li>Третий элемент списка с <em>курсивом</em></li>
+</ul>
+
+<ol>
+    <li>Нумерованный элемент 1</li>
+    <li>Нумерованный элемент 2</li>
+    <li>Нумерованный элемент 3</li>
+</ol>
+
+<h2>Смешанный текст (Latin + Cyrillic)</h2>
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Лорем ипсум долор сит амет, консектетур адипискинг элит. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Сед до эиусмод темпор инкидидунт ут лаборе эт долоре магна аликуа.</p>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th width="8cm">Заголовок 1 / Header 1</th>
+            <th style="width:12cm;">Заголовок 2 / Header 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Данные 1-1 / Data 1-1</td>
+            <td>Данные 1-2 / Data 1-2</td>
+        </tr>
+        <tr>
+            <td>Данные 2-1 / Data 2-1</td>
+            <td>Данные 2-2 / Data 2-2</td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Fin de la prueba. Конец теста. End of test.</p>
