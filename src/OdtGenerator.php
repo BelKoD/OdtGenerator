@@ -3,6 +3,8 @@
 namespace BelKoD\OdtGenerator;
 
 use BelKoD\OdtGenerator\HtmlTags\TagHandler;
+use BelKoD\OdtGenerator\Exception\ValidationException;
+use BelKoD\OdtGenerator\Exception\IOException;
 
 class OdtGenerator
 {
@@ -60,19 +62,38 @@ class OdtGenerator
      *
      * @param string $html HTML-содержимое для обработки
      * @param string $outputFile Имя выходного файла, например "document.odt"
-     * @throws \Exception
+     * @throws IOException
+     * @throws ValidationException
      */
     public function __construct(string $html, string $outputFile)
     {
+        // Валидация входных данных
+        if (empty($html)) {
+            throw new ValidationException('HTML содержимое не может быть пустым');
+        }
+        
+        if (empty($outputFile)) {
+            throw new ValidationException('Имя выходного файла не может быть пустым');
+        }
+        
+        if (!preg_match('/\.odt$/i', $outputFile)) {
+            throw new ValidationException('Выходной файл должен иметь расширение .odt');
+        }
+
         $this->html = $html;
 
         // Создаём временную директорию
         $tempBase = tempnam(sys_get_temp_dir(), 'pk_' . time() . '_');
-        if (!unlink($tempBase)) {
-            throw new \Exception("Не удалось удалить временный файл: {$tempBase}");
+        if ($tempBase === false) {
+            throw new IOException('Не удалось создать временный файл');
         }
-        if (!mkdir($tempBase)) {
-            throw new \Exception("Не удалось создать временную директорию: {$tempBase}");
+        
+        if (!unlink($tempBase)) {
+            throw new IOException("Не удалось удалить временный файл: {$tempBase}");
+        }
+        
+        if (!mkdir($tempBase, 0755, true)) {
+            throw new IOException("Не удалось создать временную директорию: {$tempBase}");
         }
 
         $this->tempDir = $tempBase;
@@ -84,6 +105,9 @@ class OdtGenerator
 
     /**
      * Обработка HTML данных, генерация XML представления и создание файла ODT.
+     *
+     * @return self
+     * @throws IOException
      */
     public function generate(): self
     {
@@ -105,7 +129,13 @@ class OdtGenerator
         }
 
         $xml = $dom->saveXML();
-        file_put_contents($this->tempDir.'/source.xml', $xml);
+        if ($xml === false) {
+            throw new IOException('Не удалось сохранить XML представление документа');
+        }
+        
+        if (file_put_contents($this->tempDir.'/source.xml', $xml) === false) {
+            throw new IOException('Не удалось записать source.xml во временную директорию');
+        }
 
         $paragraphs = [];
         $this->processChildren($dom->documentElement, $paragraphs);
@@ -295,7 +325,7 @@ class OdtGenerator
      * Возвращает содержимое созданного ODT документа
      *
      * @return string|null
-     * @throws \Exception
+     * @throws IOException
      */
     public function getOutputFile(): ?string
     {
@@ -307,7 +337,7 @@ class OdtGenerator
         $content = file_get_contents($this->outputPath);
         if ($content === false) {
             error_log("Failed to read ODT file: {$this->outputPath}");
-            throw new \Exception("Не удалось прочитать файл: {$this->outputPath}");
+            throw new IOException("Не удалось прочитать файл: {$this->outputPath}");
         }
         
         return $content;
@@ -319,7 +349,6 @@ class OdtGenerator
      * @param \DOMNode $node Нода тега HTML/
      * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
      * @return void
-     * @throws \Exception
      */
     public function processNode(\DOMNode $node, array &$paragraphs)
     {
@@ -346,13 +375,13 @@ class OdtGenerator
      *
      * @param string $contentXml XML документа ODT в виде текстовой строки.
      * @return void
-     * @throws \Exception
+     * @throws IOException
      */
     private function createODTFile(string $contentXml)
     {
         $zip = new \ZipArchive();
         if ($zip->open($this->outputPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            throw new \Exception("Не удалось создать файл: " . $this->outputPath);
+            throw new IOException("Не удалось создать файл: " . $this->outputPath);
         }
 
         // mimetype (должен быть первым и не сжатым!)
