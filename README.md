@@ -49,10 +49,10 @@ $generator = new OdtGenerator($html, $outputFile);
 $generator->generate();
 
 // Сохранение файла
-file_put_contents('my-document.odt', $generator->getOutput());
+file_put_contents('my-document.odt', $generator->getOutputFile());
 ```
 
-### Расширенное использование с кастомными компонентами
+### Расширенное использование с кастомным архиватором
 
 ```php
 <?php
@@ -61,18 +61,16 @@ require_once 'vendor/autoload.php';
 
 use BelKoD\OdtGenerator\OdtGenerator;
 use BelKoD\OdtGenerator\OdtArchiver;
-use BelKoD\OdtGenerator\StyleGenerator;
 
 // Создание генератора с кастомным архиватором
 $archiver = new OdtArchiver();
-$styleGenerator = new StyleGenerator();
-$generator = new OdtGenerator($html, $outputFile, $archiver, $styleGenerator);
+$generator = new OdtGenerator($html, $outputFile, $archiver);
 
 // Генерация документа
 $generator->generate();
 
 // Получение бинарных данных ODT
-$odtData = $generator->getOutput();
+$odtData = $generator->getOutputFile();
 ```
 
 ### Работа с таблицами и изображениями
@@ -90,7 +88,7 @@ $html = '
 
 $generator = new OdtGenerator($html, 'document.odt');
 $generator->generate();
-file_put_contents('document-with-table.odt', $generator->getOutput());
+file_put_contents('document-with-table.odt', $generator->getOutputFile());
 ```
 
 ## Архитектура
@@ -115,21 +113,38 @@ file_put_contents('document-with-table.odt', $generator->getOutput());
 ```
 ├── src/
 │   ├── Exception/               # Кастомные исключения
-│   │   └── OdtGeneratorException.php
+│   │   ├── IOException.php
+│   │   ├── OdtGeneratorException.php
+│   │   └── ValidationException.php
 │   ├── HtmlTags/                # Обработчики отдельных HTML-тегов
-│   │   ├── AbstractTagHandler.php
-│   │   ├── PTagHandler.php
-│   │   ├── HTagHandler.php
-│   │   ├── TableTagHandler.php
-│   │   └── ...
+│   │   ├── BrHandler.php
+│   │   ├── ContainerTagHandler.php
+│   │   ├── HeadingHandler.php
+│   │   ├── IgnoredTagHandler.php
+│   │   ├── ImgHandler.php
+│   │   ├── ListHandler.php
+│   │   ├── NpHandler.php
+│   │   ├── PHandler.php
+│   │   ├── PageFooterHandler.php
+│   │   ├── PageHeaderHandler.php
+│   │   ├── SpanHandler.php
+│   │   ├── TableHandler.php
+│   │   ├── TagHandler.php
+│   │   ├── TagHandlerInterface.php
+│   │   ├── TbodyHandler.php
+│   │   ├── TdHandler.php
+│   │   ├── ThHandler.php
+│   │   ├── TheadHandler.php
+│   │   └── TrHandler.php
 │   ├── Utils/                   # Утилиты
-│   │   └── StyleHelper.php
+│   │   └── Misc.php
 │   ├── OdtGenerator.php         # Основной класс генератора
 │   ├── OdtGeneratorInterface.php
 │   ├── OdtArchiver.php          # Класс для работы с ZIP-архивами
 │   ├── OdtArchiverInterface.php
 │   ├── StyleGenerator.php       # Генератор стилей
 │   ├── StyleGeneratorInterface.php
+│   ├── StyleHelper.php          # Утилиты для преобразования стилей
 │   └── TagHandlerFactory.php    # Фабрика обработчиков тегов
 ├── tests/                       # Тесты
 │   ├── OdtGeneratorTest.php
