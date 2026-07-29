@@ -71,11 +71,37 @@ class TableHandler extends TagHandler
         $tableXml = '<table:table' . $attrs . '>';
 
         // Добавляем столбцы с учётом ширины
+        // Для корректного отображения ширины в редакторах ODF нужно использовать стили колонок
         for ($i = 0; $i < $maxCols; $i++) {
+            $colStyleName = null;
+            
+            // Если есть ширина для этой колонки, создаём стиль
+            if (isset($columnWidths[$i]) && $columnWidths[$i] !== null) {
+                $width = $columnWidths[$i];
+                $colStyleName = 'ColStyle_' . $i . '_' . substr(md5($width), 0, 8);
+                
+                // Проверяем, не добавлен ли уже такой стиль
+                if (!$this->generator->hasAutomaticStyle($colStyleName)) {
+                    // В ODF ширина колонки указывается в style:table-column-properties
+                    $colStyleXml = '<style:table-column-properties style:column-width="' . $width . '" />';
+                    $this->generator->addAutomaticStyle(
+                        '<style:style style:name="' . $colStyleName . '" style:family="table-column">' .
+                        $colStyleXml .
+                        '</style:style>',
+                        $colStyleName
+                    );
+                }
+            }
+            
             $colAttrs = '';
+            if ($colStyleName) {
+                $colAttrs .= ' table:style-name="' . $colStyleName . '"';
+            }
+            // Также указываем ширину напрямую в table-column для совместимости
             if (isset($columnWidths[$i]) && $columnWidths[$i] !== null) {
                 $colAttrs .= ' table:column-width="' . $columnWidths[$i] . '"';
             }
+            
             $tableXml .= '<table:table-column' . $colAttrs . '/>';
         }
 
