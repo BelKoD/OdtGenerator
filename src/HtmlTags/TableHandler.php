@@ -230,7 +230,10 @@ class TableHandler extends TagHandler
                 if (!StyleHelper::display($cell)) {
                     continue;
                 }
-                
+                $colspan = 1;
+                if ($cell->hasAttribute('colspan')) {
+                    $colspan = (int)$cell->getAttribute('colspan');
+                }
                 $width = null;
                 
                 // Проверяем атрибут width
@@ -247,12 +250,7 @@ class TableHandler extends TagHandler
                 }
                 
                 // Если найдена ширина, сохраняем её для текущей и последующих колонок (с учётом colspan)
-                if ($width) {
-                    $colspan = 1;
-                    if ($cell->hasAttribute('colspan')) {
-                        $colspan = (int)$cell->getAttribute('colspan');
-                    }
-                    
+                if ($width) { 
                     // Применяем ширину ко всем колонкам, которые занимает эта ячейка
                     for ($i = 0; $i < $colspan && $colIndex + $i < count($columnWidths); $i++) {
                         // Сохраняем только первую найденную ширину для колонки
