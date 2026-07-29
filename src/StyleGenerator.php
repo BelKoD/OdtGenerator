@@ -7,7 +7,7 @@ use BelKoD\OdtGenerator\Utils\Misc;
 /**
  * Генератор стилей.
  */
-class StyleGenerator
+class StyleGenerator implements StyleGeneratorInterface
 {
     /* @var array Кеш текстовых стилей */
     private $textStyles = [];
