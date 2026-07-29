@@ -34,6 +34,11 @@ class OdtGenerator implements OdtGeneratorInterface
     private $automaticStyles = [];
     
     /**
+     * @var array Индексы существующих автоматических стилей для быстрой проверки
+     */
+    private $automaticStyleIndex = [];
+    
+    /**
      * @var string|null Граница по умолчанию
      */
     private $defaultBorder = null;
@@ -120,6 +125,7 @@ class OdtGenerator implements OdtGeneratorInterface
     public function generate(): self
     {
         $this->automaticStyles = []; // сброс при генерации
+        $this->automaticStyleIndex = []; // сброс индекса стилей
         $html = str_replace(["\n", "\r"],'', $this->html);
         $dom = new \DOMDocument('1.0', 'UTF-8');
         
@@ -206,12 +212,27 @@ class OdtGenerator implements OdtGeneratorInterface
      * Добавляет автоматический стиль
      *
      * @param string $styleXml XML-строка стиля
+     * @param string|null $styleName Имя стиля для индексации (опционально)
      * @return self
      */
-    public function addAutomaticStyle(string $styleXml): self
+    public function addAutomaticStyle(string $styleXml, ?string $styleName = null): self
     {
         $this->automaticStyles[] = $styleXml;
+        if ($styleName !== null) {
+            $this->automaticStyleIndex[$styleName] = true;
+        }
         return $this;
+    }
+    
+    /**
+     * Проверяет, существует ли автоматический стиль с данным именем
+     *
+     * @param string $styleName Имя стиля
+     * @return bool
+     */
+    public function hasAutomaticStyle(string $styleName): bool
+    {
+        return isset($this->automaticStyleIndex[$styleName]);
     }
 
     /**
@@ -234,6 +255,25 @@ class OdtGenerator implements OdtGeneratorInterface
     public function getDefaultCellPadding(): ?string
     {
         return $this->defaultCellPadding;
+    }
+
+    /**
+     * Сбрасывает все автоматические стили и индекс
+     */
+    public function clearAutomaticStyles(): void
+    {
+        $this->automaticStyles = [];
+        $this->automaticStyleIndex = [];
+    }
+    
+    /**
+     * Возвращает массив автоматических стилей
+     *
+     * @return array
+     */
+    public function getAutomaticStyles(): array
+    {
+        return $this->automaticStyles;
     }
 
     /**

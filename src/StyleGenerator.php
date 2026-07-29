@@ -84,9 +84,9 @@ class StyleGenerator implements StyleGeneratorInterface
      * @param array $cssProperties Массив стилей ['key' => 'value'], например ['color' => 'red']
      * @param string|null $parentStyleName Имя наследуемого стиля (родителя) при необходимости.
      * @param bool $forParagraph Тригер формирования стилей для текста или абзаца.
-     * @return mixed|string
+     * @return string
      */
-    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, bool $forParagraph = false)
+    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, bool $forParagraph = false): string
     {
         ksort($cssProperties);
         $key = md5(json_encode($cssProperties) . ($forParagraph ? '_para' : ''));
