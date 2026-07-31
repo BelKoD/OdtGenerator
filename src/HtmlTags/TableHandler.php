@@ -24,6 +24,15 @@ class TableHandler extends TagHandler
      */
     public function handle(\DOMNode $node, array &$paragraphs)
     {
+        if ($node->hasAttribute('style')) {
+            $css = StyleHelper::parseCss($node->getAttribute('style'));
+
+            $display = Misc::arrayExtract($css, 'display');
+            if ($display == 'none') {
+                return;
+            }
+        }
+        
         // Сбрасываем значения
         $this->generator->setDefaultBorder(null);
         $this->generator->setDefaultCellPadding(null);
@@ -125,6 +134,25 @@ class TableHandler extends TagHandler
     protected function style(\DOMNode $node, array $options = [])
     {
         $properties = [];
+
+        $css_inline = [];
+        if ($node->hasAttribute('style')) {
+            $css = StyleHelper::parseCss($node->getAttribute('style'));
+
+            $display = Misc::arrayExtract($css, 'display');
+            if ($display == 'none') {
+                return;
+            }
+
+            // Обрабатываем CSS-свойства
+            foreach ($css as $property => $value) {
+                switch ($property) {
+                    case 'table-layout':
+                        $properties[] = 'style:table-layout="' . $value . '"';
+                        break;
+                }
+            }
+        }
 
         // Ширина таблицы
         if ($node->hasAttribute('width')) {
