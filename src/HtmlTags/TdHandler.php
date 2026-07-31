@@ -54,7 +54,8 @@ class TdHandler extends TagHandler
                         $cssParaProperties[] = 'fo:text-align="' . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
                         break;*/
                     case 'vertical-align':
-                        $cssCellProperties[] = 'style:vertical-align="' . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
+                        $normalizedValue = StyleHelper::getVerticalAlignmentOdt($value);
+                        $cssCellProperties[] = 'style:vertical-align="' . $normalizedValue . '"';
                         break;
                     case 'padding':
                     case 'padding-top':
