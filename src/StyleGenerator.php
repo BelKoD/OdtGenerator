@@ -89,7 +89,7 @@ class StyleGenerator implements StyleGeneratorInterface
     public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, bool $forParagraph = false): string
     {
         ksort($cssProperties);
-        $key = md5(json_encode($cssProperties) . ($forParagraph ? '_para' : ''));
+        $key = md5(serialize($cssProperties) . ($forParagraph ? '_para' : ''));
 
         if (isset($this->inlineStyles[$key])) {
             return $this->inlineStyles[$key];
