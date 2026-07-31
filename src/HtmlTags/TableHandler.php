@@ -60,7 +60,16 @@ class TableHandler extends TagHandler
         }
 
         // Генерируем стиль таблицы
-        $tableStyleName = $this->style($node);
+        $tableStyleName = null;
+        $tableStyle = $this->style($node);
+        if ($tableStyle) {
+            $tableStyleName = 'TableStyle_' . substr(md5($tableStyle), 0, 8);
+            $this->generator->addAutomaticStyle(
+                '<style:style style:name="' . $tableStyleName . '" style:family="table">' .
+                $tableStyle .
+                '</style:style>'
+            );
+        }
 
         // Формируем XML таблицы
         $attrs = '';
@@ -162,13 +171,19 @@ class TableHandler extends TagHandler
             }
         }
 
+        $tableStyleName = null;
         // Если нет свойств — не генерируем стиль
         if (!empty($properties)) {
             $style = '<style:table-properties ' . implode(' ', $properties) . '/>';
-            return $style;
+            $tableStyleName = 'TableStyle_' . substr(md5($style), 0, 8);
+            $this->generator->addAutomaticStyle(
+                '<style:style style:name="' . $tableStyleName . '" style:family="table">' .
+                $style .
+                '</style:style>'
+            );
         }
 
-        return null;
+        return $tableStyleName;
     }
 
     /**
