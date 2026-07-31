@@ -50,11 +50,8 @@ class TdHandler extends TagHandler
                         // Ширина теперь обрабатывается на уровне столбцов таблицы в TableHandler
                         // Это свойство игнорируется на уровне ячейки
                         break;
-                    /*case 'text-align':
-                        $cssParaProperties[] = 'fo:text-align="' . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
-                        break;*/
                     case 'vertical-align':
-                        $cssCellProperties[] = 'style:vertical-align="' . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
+                        $cssCellProperties[] = 'style:vertical-align="' . StyleHelper::getVerticalAlignmentOdt($value) . '"';
                         break;
                     case 'padding':
                     case 'padding-top':
