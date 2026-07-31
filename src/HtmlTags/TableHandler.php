@@ -4,6 +4,7 @@ namespace BelKoD\OdtGenerator\HtmlTags;
 
 use BelKoD\OdtGenerator\OdtGenerator;
 use BelKoD\OdtGenerator\StyleHelper;
+use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
  * Генератор таблицы.
@@ -60,16 +61,7 @@ class TableHandler extends TagHandler
         }
 
         // Генерируем стиль таблицы
-        $tableStyleName = null;
-        $tableStyle = $this->style($node);
-        if ($tableStyle) {
-            $tableStyleName = 'TableStyle_' . substr(md5($tableStyle), 0, 8);
-            $this->generator->addAutomaticStyle(
-                '<style:style style:name="' . $tableStyleName . '" style:family="table">' .
-                $tableStyle .
-                '</style:style>'
-            );
-        }
+        $tableStyleName = $this->style($node);
 
         // Формируем XML таблицы
         $attrs = '';
@@ -139,16 +131,24 @@ class TableHandler extends TagHandler
         if ($node->hasAttribute('style')) {
             $css = StyleHelper::parseCss($node->getAttribute('style'));
 
-            $display = Misc::arrayExtract($css, 'display');
-            if ($display == 'none') {
-                return;
-            }
-
             // Обрабатываем CSS-свойства
+            $properties[] = 'table:align="margins"';
             foreach ($css as $property => $value) {
                 switch ($property) {
                     case 'table-layout':
-                        $properties[] = 'style:table-layout="' . $value . '"';
+                        if ($value == 'fixed') {
+                            $properties[] = 'style:table-layout="' . $value . '"';
+                            $properties[] = 'fo:margin-left="0.5cm"';
+                            $properties[] = 'fo:margin-right="0.5cm"';
+                        }
+                        break;
+                    case 'margin-top':
+                    case 'margin-bottom':
+                    case 'margin-left':
+                    case 'margin-right':
+                        $converted = StyleHelper::convertToCm($value);
+                        $prop = str_replace('margin-', 'fo:margin-', $property);
+                        $properties[] = $prop . '="' . htmlspecialchars($converted, ENT_QUOTES, 'UTF-8') . '"';
                         break;
                 }
             }
@@ -159,6 +159,7 @@ class TableHandler extends TagHandler
             $width = StyleHelper::convertToCm($node->getAttribute('width'));
             if ($width) {
                 $properties[] = 'fo:width="' . $width . '"';
+                $properties[] = 'style:width="' . $width . '"';
             }
         }
 
