@@ -160,14 +160,13 @@ class TdHandler extends TagHandler
     protected function build(\DOMNode $node, string $styleName = ''): string
     {
         $result = '';
-
+        $textContent = '';
+        
         foreach ($node->childNodes as $child) {
             if ($child->nodeType === \XML_TEXT_NODE) {
                 /* текстовое содержимое */
                 if (trim($child->nodeValue)) {
-                    $result .= '<text:p text:style-name="' . $styleName . '">' .
-                        \htmlspecialchars($child->nodeValue, \ENT_NOQUOTES, 'UTF-8') .
-                        '</text:p>';
+                    $textContent .= \htmlspecialchars($child->nodeValue, \ENT_NOQUOTES, 'UTF-8');
                 }
             } elseif ($child->nodeType === \XML_ELEMENT_NODE) {
                 /* Нода */
@@ -175,11 +174,25 @@ class TdHandler extends TagHandler
                 $output = [];
                 $handler->handle($child, $output);
                 if (!empty($output)) {
+                    // Если есть накопленный текст, добавляем его перед элементом
+                    if ($textContent !== '') {
+                        $result .= '<text:span text:style-name="' . $styleName . '">' . $textContent . '</text:span>';
+                        $textContent = '';
+                    }
                     $result .= implode('', $output);
                 }
             }
         }
 
+        // Добавляем оставшийся текст после всех элементов
+        if ($textContent !== '') {
+            $result .= '<text:span text:style-name="' . $styleName . '">' . $textContent . '</text:span>';
+        }
+
+        // Оборачиваем всё содержимое в один text:p, если оно есть
+        if ($result !== '') {
+            $result = '<text:p text:style-name="' . $styleName . '">' . $result . '</text:p>';
+        }
         return $result;
     }
 
