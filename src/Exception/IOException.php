@@ -1,6 +1,6 @@
 <?php
 
-namespace OdtGenerator\Exception;
+namespace BelKoD\OdtGenerator\Exception;
 
 /**
  * Исключение, возникающее при ошибках ввода-вывода (файловые операции).
