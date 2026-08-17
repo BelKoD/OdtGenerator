@@ -29,7 +29,7 @@ interface OdtArchiverInterface
      * @return array Массив записей манифеста
      * @throws IOException
      */
-    public function addDirectory(\ZipArchive $zip, string $sourceDir, string $targetDir): array;
+    public function addDirectory(\ZipArchive $zip, string $sourceDir, string $targetDir);
 
     /**
      * Определяет MIME-тип файла
@@ -37,5 +37,5 @@ interface OdtArchiverInterface
      * @param string $filePath Путь к файлу
      * @return string MIME-тип файла
      */
-    public function getMimeType(string $filePath): string;
+    public function getMimeType(string $filePath);
 }

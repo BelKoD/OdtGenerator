@@ -52,7 +52,7 @@ class StyleHelper
      * @param mixed $value Значение атрибута
      * @return string
      */
-    public static function convertToPt($value): string
+    public static function convertToPt($value)
     {
         if (is_numeric($value)) {
             $value .= 'px';
@@ -97,7 +97,7 @@ class StyleHelper
      * @param string $align Горизонтальная ориентация.
      * @return string
      */
-    public static function getAlignmentOdt(string $align): string
+    public static function getAlignmentOdt($align)
     {
         $map = [
             'left' => 'left',
@@ -114,7 +114,7 @@ class StyleHelper
      * @param string $valign Вертикальная ориентация.
      * @return string
      */
-    public static function getVerticalAlignmentOdt(string $valign): string
+    public static function getVerticalAlignmentOdt($valign)
     {
         $map = [
             'top' => 'top',
@@ -131,7 +131,7 @@ class StyleHelper
      * @param mixed $border Значение "бордюра".
      * @return array|string[]
      */
-    public static function generateBorderSides($border): array
+    public static function generateBorderSides($border)
     {
         if (empty($border)) return [];
 
@@ -161,7 +161,7 @@ class StyleHelper
      * @param string $orientation Ориентация (portrait, landscape)
      * @return string Ширина в формате "21.000cm"
      */
-    public static function getPageSizeWidth(string $size, string $orientation): string
+    public static function getPageSizeWidth($size, $orientation)
     {
         $sizes = self::getPageSizes();
 
@@ -183,7 +183,7 @@ class StyleHelper
      * @param string $orientation Ориентация (portrait, landscape)
      * @return string Высота в формате "29.700cm"
      */
-    public static function getPageSizeHeight(string $size, string $orientation): string
+    public static function getPageSizeHeight($size, $orientation)
     {
         $sizes = self::getPageSizes();
 
@@ -203,7 +203,7 @@ class StyleHelper
      *
      * @return array
      */
-    private static function getPageSizes(): array
+    private static function getPageSizes()
     {
         return [
             'A4' => ['width' => '21.000cm', 'height' => '29.700cm'],
@@ -219,7 +219,7 @@ class StyleHelper
      * @param string $color CSS-цвет (например, "#abc", "red", "#aabbcc")
      * @return string Нормализованный цвет в формате #rrggbb
      */
-    public static function normalizeColor(string $color): string
+    public static function normalizeColor($color)
     {
         // Преобразуем #rgb -> #rrggbb
         if (preg_match('/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i', $color, $matches)) {
@@ -264,7 +264,7 @@ class StyleHelper
      * @param mixed $styleString
      * @return array
      */
-    public static function parseCss($styleString): array
+    public static function parseCss($styleString)
     {
         if (!is_string($styleString)) {
             return [];
@@ -302,7 +302,7 @@ class StyleHelper
      * @param \DOMNode $node нода узла
      * @return bool
      */
-    public static function display(\DOMNode $node): bool
+    public static function display(\DOMNode $node)
     {
         if ($node->hasAttribute('style')) {
             $css = StyleHelper::parseCss($node->getAttribute('style'));

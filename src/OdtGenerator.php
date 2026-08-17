@@ -77,7 +77,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @throws IOException
      * @throws ValidationException
      */
-    public function __construct(string $html, string $outputFile, ?OdtArchiverInterface $archiver = null)
+    public function __construct($html, $outputFile, OdtArchiverInterface $archiver = null)
     {
         // Валидация входных данных
         if (empty($html)) {
@@ -181,7 +181,7 @@ class OdtGenerator implements OdtGeneratorInterface
         return $this;
     }
 
-    public function getGlobalSettings(): array
+    public function getGlobalSettings()
     {
         return $this->styleGenerator->getGlobalSettings();
     }
@@ -215,7 +215,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string|null $styleName Имя стиля для индексации (опционально)
      * @return self
      */
-    public function addAutomaticStyle(string $styleXml, ?string $styleName = null): self
+    public function addAutomaticStyle($styleXml, $styleName = null)
     {
         $this->automaticStyles[] = $styleXml;
         if ($styleName !== null) {
@@ -230,7 +230,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string $styleName Имя стиля
      * @return bool
      */
-    public function hasAutomaticStyle(string $styleName)
+    public function hasAutomaticStyle($styleName)
     {
         return isset($this->automaticStyleIndex[$styleName]);
     }
@@ -271,7 +271,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return array
      */
-    public function getAutomaticStyles(): array
+    public function getAutomaticStyles()
     {
         return $this->automaticStyles;
     }
@@ -279,7 +279,7 @@ class OdtGenerator implements OdtGeneratorInterface
     /**
      * @return array
      */
-    public function getMasterStyles(): array
+    public function getMasterStyles()
     {
         return $this->masterStyles;
     }
@@ -291,7 +291,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string $type Тип мастер-стиля (например, 'header', 'footer')
      * @return self
      */
-    public function setMasterStyles(string $masterStyles, string $type = 'header'): self
+    public function setMasterStyles($masterStyles, $type = 'header')
     {
         $this->masterStyles[$type][] = $masterStyles;
         return $this;
@@ -303,7 +303,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
      * @return string Возвращает XML в виде текстовой строки.
      */
-    private function buildContentXml(array $paragraphs): string
+    private function buildContentXml(array $paragraphs)
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<office:document-content ' .
@@ -332,7 +332,7 @@ class OdtGenerator implements OdtGeneratorInterface
         return $xml;
     }
 
-    private function buildStylesXml(): string
+    private function buildStylesXml()
     {
         // Генерация стилей страницы, таблиц, колонтитулов
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' .
@@ -354,7 +354,7 @@ class OdtGenerator implements OdtGeneratorInterface
     /**
      * @return string
      */
-    public function getTempDir(): string
+    public function getTempDir()
     {
         return $this->tempDir;
     }
@@ -364,7 +364,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string
      */
-    public function getOutputPath(): string
+    public function getOutputPath()
     {
         return $this->outputPath;
     }
@@ -425,7 +425,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @return void
      * @throws IOException
      */
-    private function createODTFile(string $contentXml)
+    private function createODTFile($contentXml)
     {
         // Подготавливаем файлы для архива
         $files = [
@@ -456,7 +456,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string XML манифеста
      */
-    private function buildManifest(): string
+    private function buildManifest()
     {
         $subManifest = '';
         

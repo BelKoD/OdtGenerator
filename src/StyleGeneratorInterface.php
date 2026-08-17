@@ -20,7 +20,7 @@ interface StyleGeneratorInterface
      *
      * @return array
      */
-    public function getGlobalSettings(): array;
+    public function getGlobalSettings();
 
     /**
      * Создает текстовый именованный стиль.
@@ -39,7 +39,7 @@ interface StyleGeneratorInterface
      * @param bool $forParagraph Триггер формирования стилей для текста или абзаца
      * @return string Имя созданного стиля
      */
-    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, bool $forParagraph = false): string;
+    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, $forParagraph = false);
 
     /**
      * Создает стиль для абзаца, начинающего новый лист (разрыв страницы).
@@ -54,5 +54,5 @@ interface StyleGeneratorInterface
      * @param array $automaticStyles Массив созданных стилей
      * @return string XML-строка со стилями
      */
-    public function buildDocumentStyles(array $automaticStyles = []): string;
+    public function buildDocumentStyles(array $automaticStyles = []);
 }
