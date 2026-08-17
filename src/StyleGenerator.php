@@ -51,7 +51,7 @@ class StyleGenerator implements StyleGeneratorInterface
      *
      * @return array|string[]
      */
-    public function getGlobalSettings(): array
+    public function getGlobalSettings()
     {
         return $this->globalSettings;
     }
@@ -86,7 +86,7 @@ class StyleGenerator implements StyleGeneratorInterface
      * @param bool $forParagraph Тригер формирования стилей для текста или абзаца.
      * @return string
      */
-    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, bool $forParagraph = false): string
+    public function ensureInlineStyle(array $cssProperties, $parentStyleName = null, $forParagraph = false)
     {
         ksort($cssProperties);
         $key = md5(serialize($cssProperties) . ($forParagraph ? '_para' : ''));
@@ -215,7 +215,7 @@ class StyleGenerator implements StyleGeneratorInterface
      * @param array $automaticStyles Массив созданых стилей
      * @return string
      */
-    public function buildDocumentStyles(array $automaticStyles = []): string
+    public function buildDocumentStyles(array $automaticStyles = [])
     {
         $xml = '';
         // Автоматические стили (включая page-layout)
@@ -244,7 +244,7 @@ class StyleGenerator implements StyleGeneratorInterface
      *
      * @return string
      */
-    private function buildPageLayout(): string
+    private function buildPageLayout()
     {
         $settings = $this->globalSettings;
         $xml = '<style:page-layout style:name="PageLayout1">' . "\n";
@@ -280,7 +280,7 @@ class StyleGenerator implements StyleGeneratorInterface
      *
      * @return string
      */
-    private function buildDefaultStyles(): string
+    private function buildDefaultStyles()
     {
         $settings = $this->globalSettings;
 
@@ -366,7 +366,7 @@ class StyleGenerator implements StyleGeneratorInterface
      *
      * @return string
      */
-    private function buildMasterStyles(): string
+    private function buildMasterStyles()
     {
         $masterStyles = $this->generator->getMasterStyles();
         $header = Misc::arrayExtract($masterStyles, 'header', []);

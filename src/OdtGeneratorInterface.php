@@ -28,7 +28,7 @@ interface OdtGeneratorInterface
      *
      * @return array
      */
-    public function getGlobalSettings(): array;
+    public function getGlobalSettings();
 
     /**
      * Устанавливает границу по умолчанию.
@@ -36,14 +36,14 @@ interface OdtGeneratorInterface
      * @param string|null $border Граница (например, "1pt solid #000")
      * @return self
      */
-    public function setDefaultBorder(?string $border): self;
+    public function setDefaultBorder($border): self;
 
     /**
      * Возвращает границу по умолчанию.
      *
      * @return string|null
      */
-    public function getDefaultBorder(): ?string;
+    public function getDefaultBorder();
 
     /**
      * Добавляет автоматический стиль.
@@ -59,21 +59,21 @@ interface OdtGeneratorInterface
      * @param string|null $padding Отступ (например, "0.1cm")
      * @return self
      */
-    public function setDefaultCellPadding(?string $padding): self;
+    public function setDefaultCellPadding($padding): self;
 
     /**
      * Возвращает отступ ячеек по умолчанию.
      *
      * @return string|null
      */
-    public function getDefaultCellPadding(): ?string;
+    public function getDefaultCellPadding();
 
     /**
      * Возвращает массив мастер-стилей.
      *
      * @return array
      */
-    public function getMasterStyles(): array;
+    public function getMasterStyles();
 
     /**
      * Устанавливает мастер-стили.
@@ -89,7 +89,7 @@ interface OdtGeneratorInterface
      *
      * @return string
      */
-    public function getOutputPath(): string;
+    public function getOutputPath();
 
     /**
      * Возвращает содержимое созданного ODT документа.
@@ -97,5 +97,5 @@ interface OdtGeneratorInterface
      * @return string|null
      * @throws Exception\IOException
      */
-    public function getOutputFile(): ?string;
+    public function getOutputFile();
 }

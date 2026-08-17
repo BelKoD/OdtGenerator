@@ -203,7 +203,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string|null
      */
-    public function getDefaultBorder(): ?string
+    public function getDefaultBorder()
     {
         return $this->defaultBorder;
     }
@@ -230,7 +230,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string $styleName Имя стиля
      * @return bool
      */
-    public function hasAutomaticStyle(string $styleName): bool
+    public function hasAutomaticStyle(string $styleName)
     {
         return isset($this->automaticStyleIndex[$styleName]);
     }
@@ -252,7 +252,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string|null
      */
-    public function getDefaultCellPadding(): ?string
+    public function getDefaultCellPadding()
     {
         return $this->defaultCellPadding;
     }
@@ -260,7 +260,7 @@ class OdtGenerator implements OdtGeneratorInterface
     /**
      * Сбрасывает все автоматические стили и индекс
      */
-    public function clearAutomaticStyles(): void
+    public function clearAutomaticStyles()
     {
         $this->automaticStyles = [];
         $this->automaticStyleIndex = [];
@@ -375,7 +375,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @return string|null
      * @throws IOException
      */
-    public function getOutputFile(): ?string
+    public function getOutputFile()
     {
         if (!file_exists($this->outputPath)) {
             error_log("ODT file not found: {$this->outputPath}");
