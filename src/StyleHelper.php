@@ -120,6 +120,7 @@ class StyleHelper
             'top' => 'top',
             'middle' => 'middle',
             'bottom' => 'bottom',
+            'center' => 'middle',
         ];
         return $map[strtolower($valign)] ?? 'top';
     }
