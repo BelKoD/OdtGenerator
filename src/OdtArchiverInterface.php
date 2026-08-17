@@ -18,7 +18,7 @@ interface OdtArchiverInterface
      * @return void
      * @throws IOException
      */
-    public function createArchive(string $outputPath, array $files, array $directories = []): void;
+    public function createArchive(string $outputPath, array $files, array $directories = []);
 
     /**
      * Добавляет директорию с файлами в архив
