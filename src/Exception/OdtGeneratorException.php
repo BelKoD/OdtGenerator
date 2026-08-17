@@ -1,6 +1,6 @@
 <?php
 
-namespace OdtGenerator\Exception;
+namespace BelKoD\OdtGenerator\Exception;
 
 /**
  * Базовое исключение для генератора ODT.
