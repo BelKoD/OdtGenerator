@@ -13,7 +13,7 @@ interface OdtGeneratorInterface
      * @return self
      * @throws Exception\IOException
      */
-    public function generate(): self;
+    public function generate(): OdtGeneratorInterface;
 
     /**
      * Устанавливает глобальные настройки.
@@ -21,7 +21,7 @@ interface OdtGeneratorInterface
      * @param array $settings
      * @return self
      */
-    public function setGlobalSettings(array $settings): self;
+    public function setGlobalSettings(array $settings): OdtGeneratorInterface;
 
     /**
      * Возвращает глобальные настройки.
@@ -36,7 +36,7 @@ interface OdtGeneratorInterface
      * @param string|null $border Граница (например, "1pt solid #000")
      * @return self
      */
-    public function setDefaultBorder($border): self;
+    public function setDefaultBorder($border): OdtGeneratorInterface;
 
     /**
      * Возвращает границу по умолчанию.
@@ -51,7 +51,7 @@ interface OdtGeneratorInterface
      * @param string $styleXml XML-строка стиля
      * @return self
      */
-    public function addAutomaticStyle(string $styleXml): self;
+    public function addAutomaticStyle(string $styleXml, $styleName = null): OdtGeneratorInterface;
 
     /**
      * Устанавливает отступ ячеек по умолчанию.
@@ -59,7 +59,7 @@ interface OdtGeneratorInterface
      * @param string|null $padding Отступ (например, "0.1cm")
      * @return self
      */
-    public function setDefaultCellPadding($padding): self;
+    public function setDefaultCellPadding($padding): OdtGeneratorInterface;
 
     /**
      * Возвращает отступ ячеек по умолчанию.
@@ -82,7 +82,7 @@ interface OdtGeneratorInterface
      * @param string $type Тип мастер-стиля (например, 'header', 'footer')
      * @return self
      */
-    public function setMasterStyles(string $masterStyles, string $type = 'header'): self;
+    public function setMasterStyles(string $masterStyles, string $type = 'header'): OdtGeneratorInterface;
 
     /**
      * Возвращает полный путь к созданному ODT-файлу.
