@@ -77,7 +77,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @throws IOException
      * @throws ValidationException
      */
-    public function __construct($html, $outputFile, OdtArchiverInterface $archiver = null)
+    public function __construct(string $html, string $outputFile, OdtArchiverInterface $archiver = null)
     {
         // Валидация входных данных
         if (empty($html)) {
@@ -122,7 +122,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @return self
      * @throws IOException
      */
-    public function generate(): self
+    public function generate(): OdtGeneratorInterface
     {
         $this->automaticStyles = []; // сброс при генерации
         $this->automaticStyleIndex = []; // сброс индекса стилей
@@ -175,13 +175,13 @@ class OdtGenerator implements OdtGeneratorInterface
         }
     }
 
-    public function setGlobalSettings(array $settings = []): self
+    public function setGlobalSettings(array $settings = []): OdtGeneratorInterface
     {
         $this->styleGenerator->setGlobalSettings($settings);
         return $this;
     }
 
-    public function getGlobalSettings()
+    public function getGlobalSettings(): array
     {
         return $this->styleGenerator->getGlobalSettings();
     }
@@ -192,7 +192,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string|null $border Граница (например, "1pt solid #000")
      * @return self
      */
-    public function setDefaultBorder($border): self
+    public function setDefaultBorder($border): OdtGeneratorInterface
     {
         $this->defaultBorder = $border;
         return $this;
@@ -215,7 +215,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string|null $styleName Имя стиля для индексации (опционально)
      * @return self
      */
-    public function addAutomaticStyle($styleXml, $styleName = null)
+    public function addAutomaticStyle(string $styleXml, $styleName = null): OdtGeneratorInterface
     {
         $this->automaticStyles[] = $styleXml;
         if ($styleName !== null) {
@@ -230,7 +230,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string $styleName Имя стиля
      * @return bool
      */
-    public function hasAutomaticStyle($styleName)
+    public function hasAutomaticStyle(string $styleName): bool
     {
         return isset($this->automaticStyleIndex[$styleName]);
     }
@@ -241,7 +241,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string|null $padding Отступ (например, "0.1cm")
      * @return self
      */
-    public function setDefaultCellPadding($padding): self
+    public function setDefaultCellPadding($padding): OdtGeneratorInterface
     {
         $this->defaultCellPadding = $padding;
         return $this;
@@ -271,7 +271,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return array
      */
-    public function getAutomaticStyles()
+    public function getAutomaticStyles(): array
     {
         return $this->automaticStyles;
     }
@@ -279,7 +279,7 @@ class OdtGenerator implements OdtGeneratorInterface
     /**
      * @return array
      */
-    public function getMasterStyles()
+    public function getMasterStyles(): array
     {
         return $this->masterStyles;
     }
@@ -291,7 +291,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param string $type Тип мастер-стиля (например, 'header', 'footer')
      * @return self
      */
-    public function setMasterStyles($masterStyles, $type = 'header')
+    public function setMasterStyles(string $masterStyles, string $type = 'header'):OdtGeneratorInterface
     {
         $this->masterStyles[$type][] = $masterStyles;
         return $this;
@@ -303,7 +303,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
      * @return string Возвращает XML в виде текстовой строки.
      */
-    private function buildContentXml(array $paragraphs)
+    private function buildContentXml(array $paragraphs): string
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<office:document-content ' .
@@ -332,7 +332,7 @@ class OdtGenerator implements OdtGeneratorInterface
         return $xml;
     }
 
-    private function buildStylesXml()
+    private function buildStylesXml(): string
     {
         // Генерация стилей страницы, таблиц, колонтитулов
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' .
@@ -354,7 +354,7 @@ class OdtGenerator implements OdtGeneratorInterface
     /**
      * @return string
      */
-    public function getTempDir()
+    public function getTempDir(): string
     {
         return $this->tempDir;
     }
@@ -364,7 +364,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string
      */
-    public function getOutputPath()
+    public function getOutputPath(): string
     {
         return $this->outputPath;
     }
@@ -425,7 +425,7 @@ class OdtGenerator implements OdtGeneratorInterface
      * @return void
      * @throws IOException
      */
-    private function createODTFile($contentXml)
+    private function createODTFile(string $contentXml)
     {
         // Подготавливаем файлы для архива
         $files = [
@@ -456,7 +456,7 @@ class OdtGenerator implements OdtGeneratorInterface
      *
      * @return string XML манифеста
      */
-    private function buildManifest()
+    private function buildManifest(): string
     {
         $subManifest = '';
         
