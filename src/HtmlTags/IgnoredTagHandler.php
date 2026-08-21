@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Пустой генератор.
  */
-class IgnoredTagHandler extends TagHandler
+class IgnoredTagHandler extends TagHandler implements BlockInterface
 {
     /**
      * @inheritDoc

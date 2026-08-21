@@ -5,6 +5,7 @@ namespace BelKoD\OdtGenerator\HtmlTags;
 use BelKoD\OdtGenerator\StyleHelper;
 use BelKoD\OdtGenerator\TagHandlerFactory;
 use BelKoD\OdtGenerator\Utils\Misc;
+use BelKoD\OdtGenerator\Interfaces\TagHandlerInterface;
 
 /**
  * Базовый класс.

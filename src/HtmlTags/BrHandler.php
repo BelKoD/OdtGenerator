@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\InlineInterface;
+
 /**
  * Генератор перевода строки.
  */
-class BrHandler extends TagHandler
+class BrHandler extends TagHandler implements InlineInterface
 {
     /**
      * @inheritDoc

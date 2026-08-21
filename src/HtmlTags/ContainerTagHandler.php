@@ -2,12 +2,13 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\OdtGenerator;
 
 /**
  * Генератор контейнера.
  */
-class ContainerTagHandler extends TagHandler
+class ContainerTagHandler extends TagHandler implements BlockInterface
 {
     /** @var OdtGenerator */
     private $generator;

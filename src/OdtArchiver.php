@@ -3,6 +3,7 @@
 namespace BelKoD\OdtGenerator;
 
 use BelKoD\OdtGenerator\Exception\IOException;
+use BelKoD\OdtGenerator\Interfaces\OdtArchiverInterface;
 
 /**
  * Класс для работы с ZIP-архивами ODT документов

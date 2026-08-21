@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор THEAD.
  */
-class TheadHandler extends TagHandler
+class TheadHandler extends TagHandler implements BlockInterface
 {
 
     public function __construct($factory)

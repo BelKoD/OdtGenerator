@@ -1,10 +1,12 @@
 <?php
 
 namespace BelKoD\OdtGenerator\HtmlTags;
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор создания новой страницы.
  */
-class NpHandler extends TagHandler
+class NpHandler extends TagHandler implements BlockInterface
 {
 
     public function __construct($factory)

@@ -2,10 +2,11 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\InlineInterface;
 use BelKoD\OdtGenerator\StyleHelper;
 use BelKoD\OdtGenerator\Utils\Misc;
 
-class ImgHandler extends TagHandler
+class ImgHandler extends TagHandler implements InlineInterface
 {
 
     public function __construct($factory)
@@ -43,7 +44,7 @@ class ImgHandler extends TagHandler
 
         $style_arr = $this->sub_style($node, $imagePath);
         // Генерируем XML
-        $xml = '<text:p text:style-name="' . $style_arr['styleName'] . '">';
+        $xml = '<text:span text:style-name="' . $style_arr['styleName'] . '">';
         $xml .= '<draw:frame';
         if ($style_arr['width']) {
             $xml .= ' svg:width="' . $style_arr['width'] . '"';
@@ -54,7 +55,7 @@ class ImgHandler extends TagHandler
         $xml .= ' draw:style-name="Graphics" draw:text-style-name="Graphics">';
         $xml .= '<draw:image xlink:href="' . $archivePath . '" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>';
         $xml .= '</draw:frame>';
-        $xml .= '</text:p>';
+        $xml .= '</text:span>';
 
         $paragraphs[] = $xml;
     }

@@ -2,12 +2,14 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\InlineInterface;
 use BelKoD\OdtGenerator\StyleHelper;
+
 
 /**
  * Генератор текстового элемента.
  */
-class SpanHandler extends TagHandler
+class SpanHandler extends TagHandler implements InlineInterface
 {
 
     public function __construct($factory)

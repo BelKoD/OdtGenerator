@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор абзаца.
  */
-class PHandler extends TagHandler
+class PHandler extends TagHandler implements BlockInterface
 {
 
     public function __construct($factory)
