@@ -1,9 +1,11 @@
 <?php
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\OdtGenerator;
 
-class PageFooterHandler extends TagHandler {
+class PageFooterHandler extends TagHandler implements BlockInterface
+{
     /* @var OdtGenerator*/
     private $generator;
 

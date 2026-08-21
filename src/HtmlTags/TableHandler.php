@@ -2,6 +2,7 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\OdtGenerator;
 use BelKoD\OdtGenerator\StyleHelper;
 use BelKoD\OdtGenerator\Utils\Misc;
@@ -9,7 +10,7 @@ use BelKoD\OdtGenerator\Utils\Misc;
 /**
  * Генератор таблицы.
  */
-class TableHandler extends TagHandler
+class TableHandler extends TagHandler implements BlockInterface
 {
     /** @var OdtGenerator */
     private $generator;

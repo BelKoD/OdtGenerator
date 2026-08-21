@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор заголовков H1-H6.
  */
-class HeadingHandler extends TagHandler
+class HeadingHandler extends TagHandler implements BlockInterface
 {
 
     public function __construct($factory)

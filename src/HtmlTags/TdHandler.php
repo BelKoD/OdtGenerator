@@ -2,13 +2,14 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\StyleHelper;
 use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
  * Генератор TD.
  */
-class TdHandler extends TagHandler
+class TdHandler extends TagHandler implements BlockInterface
 {
     /* @var int Доступное кол-во столбцов */
     private $availableCols;
@@ -166,7 +167,7 @@ class TdHandler extends TagHandler
                 /* текстовое содержимое */
                 if (trim($child->nodeValue)) {
                     $textContent .= '<text:p text:style-name="' . $styleName . '">'
-                        .'<text:span text:style-name="' . $styleName . '">' . \htmlspecialchars($child->nodeValue, \ENT_NOQUOTES, 'UTF-8') . '</text:span>'
+                        . \htmlspecialchars($child->nodeValue, \ENT_NOQUOTES, 'UTF-8')
                         . '</text:p>';
 
                 }
@@ -178,7 +179,7 @@ class TdHandler extends TagHandler
                 if (!empty($output)) {
                     if ($handler instanceof SpanHandler) {
                         $textContent .= '<text:p text:style-name="' . $styleName . '">'
-                            .'<text:span text:style-name="' . $styleName . '">' . implode('', $output) . '</text:span>'
+                            . implode('', $output)
                             . '</text:p>';
                     } else {
                         $textContent .= implode('', $output);

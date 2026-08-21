@@ -2,6 +2,7 @@
 
 namespace BelKoD\OdtGenerator;
 
+use BelKoD\OdtGenerator\Interfaces\StyleGeneratorInterface;
 use BelKoD\OdtGenerator\Utils\Misc;
 
 /**

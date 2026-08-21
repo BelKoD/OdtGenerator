@@ -2,13 +2,14 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\OdtGenerator;
 use BelKoD\OdtGenerator\StyleGenerator;
 
 /**
  * Генератор списка, в том числе вложенного.
  */
-class ListHandler extends TagHandler
+class ListHandler extends TagHandler implements BlockInterface
 {
     /**
      * @var OdtGenerator

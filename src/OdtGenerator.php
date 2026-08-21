@@ -5,6 +5,7 @@ namespace BelKoD\OdtGenerator;
 use BelKoD\OdtGenerator\HtmlTags\TagHandler;
 use BelKoD\OdtGenerator\Exception\ValidationException;
 use BelKoD\OdtGenerator\Exception\IOException;
+use BelKoD\OdtGenerator\Interfaces\OdtGeneratorInterface;
 
 class OdtGenerator implements OdtGeneratorInterface
 {
@@ -161,7 +162,8 @@ class OdtGenerator implements OdtGeneratorInterface
 
     private function processChildren(\DOMNode $parentNode, array &$paragraphs)
     {
-        foreach ($parentNode->childNodes as $child) {
+        //var_dump($parentNode);
+        /*foreach ($parentNode->childNodes as $child) {
             if ($child->nodeType === XML_ELEMENT_NODE) {
                 $this->processNode($child, $paragraphs);
             } elseif ($child->nodeType === XML_TEXT_NODE) {
@@ -172,7 +174,8 @@ class OdtGenerator implements OdtGeneratorInterface
                 }
             }
             // Рекурсия не нужна — processNode уже вызывает обработчики, которые сами обходят детей (например, TableHandler)
-        }
+        }*/
+        $this->processNode($parentNode, $paragraphs);
     }
 
     public function setGlobalSettings(array $settings = []): OdtGeneratorInterface

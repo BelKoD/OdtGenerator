@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор TR.
  */
-class TrHandler extends TagHandler
+class TrHandler extends TagHandler implements BlockInterface
 {
     private $maxCols;
 

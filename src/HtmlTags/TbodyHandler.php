@@ -2,10 +2,12 @@
 
 namespace BelKoD\OdtGenerator\HtmlTags;
 
+use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+
 /**
  * Генератор TBODY.
  */
-class TbodyHandler extends TagHandler
+class TbodyHandler extends TagHandler implements BlockInterface
 {
 
     public function __construct($factory)
