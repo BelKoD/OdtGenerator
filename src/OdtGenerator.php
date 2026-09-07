@@ -5,7 +5,9 @@ namespace BelKoD\OdtGenerator;
 use BelKoD\OdtGenerator\HtmlTags\TagHandler;
 use BelKoD\OdtGenerator\Exception\ValidationException;
 use BelKoD\OdtGenerator\Exception\IOException;
+use BelKoD\OdtGenerator\Interfaces\OdtArchiverInterface;
 use BelKoD\OdtGenerator\Interfaces\OdtGeneratorInterface;
+use BelKoD\OdtGenerator\Interfaces\StyleGeneratorInterface;
 
 class OdtGenerator implements OdtGeneratorInterface
 {
@@ -301,6 +303,16 @@ class OdtGenerator implements OdtGeneratorInterface
     }
 
     /**
+     * Устанавливаем архиватор
+     * 
+     * @param OdtArchiverInterface $archiver
+     */
+    public function setArchiver(OdtArchiverInterface $archiver)
+    {
+        $this->archiver = $archiver;
+    }
+    
+    /**
      * Создает XML документа ODT в виде текстовой строки.
      *
      * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
@@ -433,7 +445,6 @@ class OdtGenerator implements OdtGeneratorInterface
         // Подготавливаем файлы для архива
         $files = [
             'mimetype' => 'application/vnd.oasis.opendocument.text',
-            'META-INF/manifest.xml' => $this->buildManifest(),
             'content.xml' => $contentXml,
             'source.xml' => file_get_contents($this->tempDir.'/source.xml')
         ];
@@ -454,47 +465,4 @@ class OdtGenerator implements OdtGeneratorInterface
         $this->archiver->createArchive($this->outputPath, $files, $directories);
     }
 
-    /**
-     * Строит XML манифеста
-     *
-     * @return string XML манифеста
-     */
-    private function buildManifest(): string
-    {
-        $subManifest = '';
-        
-        // Добавляем записи манифеста для дополнительных директорий
-        foreach ($this->added_dir as $target) {
-            $addDir = $this->tempDir . '/' . $target;
-            if (!is_dir($addDir)) {
-                continue;
-            }
-
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($addDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::SELF_FIRST
-            );
-
-            foreach ($iterator as $file) {
-                if ($file->isDir()) {
-                    continue;
-                }
-
-                $filePath = $file->getPathname();
-                $relativePath = substr($filePath, strlen($addDir) + 1);
-                $archivePath = $target . '/' . $relativePath;
-                $mimeType = $this->archiver->getMimeType($filePath);
-                $subManifest .= '<manifest:file-entry manifest:full-path="' . $archivePath . '" manifest:media-type="' . $mimeType . '"/>' . "\n";
-            }
-        }
-
-        $manifest = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $manifest .= '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">' . "\n";
-        $manifest .= '<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>' . "\n";
-        $manifest .= '<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>' . "\n";
-        $manifest .= $subManifest;
-        $manifest .= '</manifest:manifest>';
-
-        return $manifest;
-    }
 }
