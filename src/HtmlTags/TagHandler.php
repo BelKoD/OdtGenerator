@@ -118,4 +118,13 @@ abstract class TagHandler implements TagHandlerInterface
 
         return $styleName;
     }
+
+    /**
+     * @param TagHandlerFactory $factory
+     */
+    public function setFactory(TagHandlerFactory $factory)
+    {
+        $this->factory = $factory;
+    }
+    
 }
