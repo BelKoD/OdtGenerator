@@ -14,9 +14,8 @@ class TdHandler extends TagHandler implements BlockInterface
     /* @var int Доступное кол-во столбцов */
     private $availableCols;
 
-    public function __construct($factory, array $options=[])
+    public function __construct(array $options=[])
     {
-        $this->factory = $factory;
         $this->availableCols = Misc::arrayExtract($options, 'availableCols', 999);;
     }
 

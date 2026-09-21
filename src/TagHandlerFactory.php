@@ -96,11 +96,11 @@ class TagHandlerFactory
         } elseif ($tagName === 'tbody') {
             $tag = new TbodyHandler();
         } elseif (in_array($tagName, ['td', 'th'])) {
-            $tag = new TdHandler($this, $options);
+            $tag = new TdHandler($options);
         } elseif ($tagName === 'tr') {
             // tr требует maxCols — будет передан из TableHandler
             // Здесь возвращаем заглушку, чтобы не падало, но реально tr обрабатывается только внутри table
-            $tag = new TrHandler($this, $options);
+            $tag = new TrHandler($options);
         } elseif (\in_array($tagName, ['html', 'body'])) {
             $tag = new ContainerTagHandler();
         } elseif ($tagName === 'np') {

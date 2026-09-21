@@ -12,9 +12,8 @@ class TrHandler extends TagHandler implements BlockInterface
 {
     private $maxCols;
 
-    public function __construct($factory, array $options=[])
+    public function __construct(array $options=[])
     {
-        $this->factory = $factory;
         $this->maxCols = Misc::arrayExtract($options, 'maxCols', 999);;
     }
 
