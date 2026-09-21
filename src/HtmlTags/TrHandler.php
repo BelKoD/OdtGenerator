@@ -3,6 +3,7 @@
 namespace BelKoD\OdtGenerator\HtmlTags;
 
 use BelKoD\OdtGenerator\Interfaces\BlockInterface;
+use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
  * Генератор TR.
@@ -11,10 +12,10 @@ class TrHandler extends TagHandler implements BlockInterface
 {
     private $maxCols;
 
-    public function __construct($factory, $maxCols)
+    public function __construct($factory, array $options=[])
     {
         $this->factory = $factory;
-        $this->maxCols = $maxCols;
+        $this->maxCols = Misc::arrayExtract($options, 'maxCols', 999);;
     }
 
     /**
