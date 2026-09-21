@@ -75,46 +75,63 @@ class TagHandlerFactory
 
         $options['css'] = $css;
         $tagName = \strtolower($node->tagName);
+        // Преобразуем имя тега в имя класса (например, 'ol' -> 'Ol', 'h1' -> 'H1')
+        $classNamePart = \ucfirst($tagName);
 
-        if ($tagName === 'p') {
-            $tag = new PHandler();
-        } elseif (\in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
-            $tag = new HeadingHandler($this);
-        } elseif (\in_array($tagName, ['ul', 'ol'])) {
-            $tag = new ListHandler($options);
-        } elseif ($tagName === 'span') {
-            $tag = new SpanHandler();
-        // Инлайновые теги форматирования — обрабатываем как span
-        } elseif (in_array($tagName, ['b', 'i', 'u', 'strong', 'em', 'small', 'mark', 'del', 'ins', 'sub', 'sup'])) {
-            $tag = new SpanHandler();
-        } elseif ($tagName === 'br') {
-            $tag = new BrHandler();
-        } elseif ($tagName === 'table') {
-            $tag = new TableHandler();
-        } elseif ($tagName === 'thead') {
-            $tag = new TheadHandler();
-        } elseif ($tagName === 'tbody') {
-            $tag = new TbodyHandler();
-        } elseif (in_array($tagName, ['td', 'th'])) {
-            $tag = new TdHandler($options);
-        } elseif ($tagName === 'tr') {
-            // tr требует maxCols — будет передан из TableHandler
-            // Здесь возвращаем заглушку, чтобы не падало, но реально tr обрабатывается только внутри table
-            $tag = new TrHandler($options);
-        } elseif (\in_array($tagName, ['html', 'body'])) {
-            $tag = new ContainerTagHandler();
-        } elseif ($tagName === 'np') {
-            $tag = new NpHandler();
-        } elseif ($tagName === 'htmlpageheader') {
-            $tag = new PageHeaderHandler();
-        } elseif ($tagName === 'htmlpagefooter') {
-            $tag = new PageFooterHandler();
-        } elseif ($tagName === 'img') {
-            $tag = new ImgHandler();
+        // Список классов-обработчиков в пространстве имен HtmlTags
+        $handlerClass = __NAMESPACE__ . '\\HtmlTags\\' . $classNamePart . 'Handler';
+
+        // Проверяем существование класса
+        if (\class_exists($handlerClass)) {
+            // Стандартный случай - конструктор принимает только фабрику или ничего
+            $reflection = new \ReflectionClass($handlerClass);
+            $constructor = $reflection->getConstructor();
+
+            if ($constructor === null || $constructor->getNumberOfRequiredParameters() === 0) {
+                $tag = new $handlerClass();
+            } else {
+                $tag =  new $handlerClass($options);
+            }
         } else {
-            $tag = new IgnoredTagHandler();
+            if ($tagName === 'p') {
+                $tag = new PHandler();
+            } elseif (\in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
+                $tag = new HeadingHandler();
+            } elseif (\in_array($tagName, ['ul', 'ol'])) {
+                $tag = new ListHandler($options);
+            } elseif ($tagName === 'span') {
+                $tag = new SpanHandler();
+                // Инлайновые теги форматирования — обрабатываем как span
+            } elseif (in_array($tagName, ['b', 'i', 'u', 'strong', 'em', 'small', 'mark', 'del', 'ins', 'sub', 'sup'])) {
+                $tag = new SpanHandler();
+            } elseif ($tagName === 'br') {
+                $tag = new BrHandler();
+            } elseif ($tagName === 'table') {
+                $tag = new TableHandler();
+            } elseif ($tagName === 'thead') {
+                $tag = new TheadHandler();
+            } elseif ($tagName === 'tbody') {
+                $tag = new TbodyHandler();
+            } elseif (in_array($tagName, ['td', 'th'])) {
+                $tag = new TdHandler($options);
+            } elseif ($tagName === 'tr') {
+                // tr требует maxCols — будет передан из TableHandler
+                // Здесь возвращаем заглушку, чтобы не падало, но реально tr обрабатывается только внутри table
+                $tag = new TrHandler($options);
+            } elseif (\in_array($tagName, ['html', 'body'])) {
+                $tag = new ContainerTagHandler();
+            } elseif ($tagName === 'np') {
+                $tag = new NpHandler();
+            } elseif ($tagName === 'htmlpageheader') {
+                $tag = new PageHeaderHandler();
+            } elseif ($tagName === 'htmlpagefooter') {
+                $tag = new PageFooterHandler();
+            } elseif ($tagName === 'img') {
+                $tag = new ImgHandler();
+            } else {
+                $tag = new IgnoredTagHandler();
+            }
         }
-        
         $tag->setFactory($this);
         return $tag;
     }
