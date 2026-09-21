@@ -12,14 +12,7 @@ use BelKoD\OdtGenerator\Utils\Misc;
  */
 class TableHandler extends TagHandler implements BlockInterface
 {
-    /** @var OdtGenerator */
-    private $generator;
-
-    public function __construct($factory)
-    {
-        $this->generator = $factory->getGenerator();
-        $this->factory = $factory;
-    }
+    public function __construct() {}
 
     /**
      * @inheritDoc
@@ -36,17 +29,17 @@ class TableHandler extends TagHandler implements BlockInterface
         }
         
         // Сбрасываем значения
-        $this->generator->setDefaultBorder(null);
-        $this->generator->setDefaultCellPadding(null);
+        $this->factory->getGenerator()->setDefaultBorder(null);
+        $this->factory->getGenerator()->setDefaultCellPadding(null);
 
         // Border
         if ($node->hasAttribute('border') && (int)$node->getAttribute('border') > 0) {
-            $this->generator->setDefaultBorder($node->getAttribute('border'));
+            $this->factory->getGenerator()->setDefaultBorder($node->getAttribute('border'));
         }
 
         // Cellpadding
         if ($node->hasAttribute('cellpadding')) {
-            $this->generator->setDefaultCellPadding($node->getAttribute('cellpadding'));
+            $this->factory->getGenerator()->setDefaultCellPadding($node->getAttribute('cellpadding'));
         }
 
         // Определяем максимальное количество столбцов
@@ -83,10 +76,10 @@ class TableHandler extends TagHandler implements BlockInterface
                 $colStyleName = 'ColStyle_' . $i . '_' . substr(md5($width), 0, 8);
                 
                 // Проверяем, не добавлен ли уже такой стиль
-                if (!$this->generator->hasAutomaticStyle($colStyleName)) {
+                if (!$this->factory->getGenerator()->hasAutomaticStyle($colStyleName)) {
                     // В ODF ширина колонки указывается в style:table-column-properties
                     $colStyleXml = '<style:table-column-properties style:column-width="' . $width . '" />';
-                    $this->generator->addAutomaticStyle(
+                    $this->factory->getGenerator()->addAutomaticStyle(
                         '<style:style style:name="' . $colStyleName . '" style:family="table-column">' .
                         $colStyleXml .
                         '</style:style>',
@@ -178,7 +171,7 @@ class TableHandler extends TagHandler implements BlockInterface
         if (!empty($properties)) {
             $style = '<style:table-properties ' . implode(' ', $properties) . '/>';
             $tableStyleName = 'TableStyle_' . substr(md5($style), 0, 8);
-            $this->generator->addAutomaticStyle(
+            $this->factory->getGenerator()->addAutomaticStyle(
                 '<style:style style:name="' . $tableStyleName . '" style:family="table">' .
                 $style .
                 '</style:style>'

@@ -10,7 +10,7 @@ use BelKoD\OdtGenerator\OdtGenerator;
  */
 class ContainerTagHandler extends TagHandler implements BlockInterface
 {
-    public function __construct($factory) { }
+    public function __construct() { }
 
     /**
      * @inheritDoc

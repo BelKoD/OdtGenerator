@@ -25,9 +25,8 @@ class ListHandler extends TagHandler implements BlockInterface
      */
     private $level = 0;
 
-    public function __construct($factory, array $options=[])
+    public function __construct(array $options=[])
     {
-        $this->factory = $factory;
         $this->level = Misc::arrayExtract($options, 'level', 0);
     }
 

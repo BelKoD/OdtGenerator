@@ -11,7 +11,6 @@ use BelKoD\OdtGenerator\HtmlTags\ListHandler;
 use BelKoD\OdtGenerator\HtmlTags\SpanHandler;
 use BelKoD\OdtGenerator\HtmlTags\BrHandler;
 use BelKoD\OdtGenerator\HtmlTags\TableHandler;
-use BelKoD\OdtGenerator\HtmlTags\TagHandlerInterface;
 use BelKoD\OdtGenerator\HtmlTags\TheadHandler;
 use BelKoD\OdtGenerator\HtmlTags\TbodyHandler;
 use BelKoD\OdtGenerator\HtmlTags\ThHandler;
@@ -20,6 +19,7 @@ use BelKoD\OdtGenerator\HtmlTags\TdHandler;
 use BelKoD\OdtGenerator\HtmlTags\PageHeaderHandler;
 use BelKoD\OdtGenerator\HtmlTags\PageFooterHandler;
 use BelKoD\OdtGenerator\HtmlTags\ImgHandler;
+use BelKoD\OdtGenerator\Interfaces\TagHandlerInterface;
 use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
@@ -77,41 +77,40 @@ class TagHandlerFactory
         $tagName = \strtolower($node->tagName);
 
         if ($tagName === 'p') {
-            $tag = new PHandler($this);
+            $tag = new PHandler();
         } elseif (\in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
             $tag = new HeadingHandler($this);
         } elseif (\in_array($tagName, ['ul', 'ol'])) {
-            $tag = new ListHandler($this, $options);
+            $tag = new ListHandler($options);
         } elseif ($tagName === 'span') {
-            $tag = new SpanHandler($this);
+            $tag = new SpanHandler();
         // Инлайновые теги форматирования — обрабатываем как span
         } elseif (in_array($tagName, ['b', 'i', 'u', 'strong', 'em', 'small', 'mark', 'del', 'ins', 'sub', 'sup'])) {
-            $tag = new SpanHandler($this);
+            $tag = new SpanHandler();
         } elseif ($tagName === 'br') {
             $tag = new BrHandler();
         } elseif ($tagName === 'table') {
-            $tag = new TableHandler($this);
+            $tag = new TableHandler();
         } elseif ($tagName === 'thead') {
-            $tag = new TheadHandler($this);
+            $tag = new TheadHandler();
         } elseif ($tagName === 'tbody') {
-            $tag = new TbodyHandler($this);
+            $tag = new TbodyHandler();
         } elseif (in_array($tagName, ['td', 'th'])) {
             $tag = new TdHandler($this, $options);
         } elseif ($tagName === 'tr') {
             // tr требует maxCols — будет передан из TableHandler
             // Здесь возвращаем заглушку, чтобы не падало, но реально tr обрабатывается только внутри table
             $tag = new TrHandler($this, $options);
-            //$tag = new IgnoredTagHandler();
         } elseif (\in_array($tagName, ['html', 'body'])) {
-            $tag = new ContainerTagHandler($this);
+            $tag = new ContainerTagHandler();
         } elseif ($tagName === 'np') {
-            $tag = new NpHandler($this);
+            $tag = new NpHandler();
         } elseif ($tagName === 'htmlpageheader') {
-            $tag = new PageHeaderHandler($this);
+            $tag = new PageHeaderHandler();
         } elseif ($tagName === 'htmlpagefooter') {
-            $tag = new PageFooterHandler($this);
+            $tag = new PageFooterHandler();
         } elseif ($tagName === 'img') {
-            $tag = new ImgHandler($this);
+            $tag = new ImgHandler();
         } else {
             $tag = new IgnoredTagHandler();
         }

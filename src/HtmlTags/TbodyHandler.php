@@ -10,10 +10,7 @@ use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 class TbodyHandler extends TagHandler implements BlockInterface
 {
 
-    public function __construct($factory)
-    {
-        $this->factory = $factory;
-    }
+    public function __construct() { }
 
     /**
      * @inheritDoc
@@ -33,7 +30,8 @@ class TbodyHandler extends TagHandler implements BlockInterface
 
         foreach ($node->childNodes as $child) {
             if ($child->nodeType === \XML_ELEMENT_NODE && strtolower($child->tagName) === 'tr') {
-                $trHandler = new TrHandler($this->factory, 0);
+                $trHandler = new TrHandler($this->factory, ['maxCols' => 0]);
+                $trHandler->setFactory($this->factory);
                 $output = [];
                 $trHandler->handle($child, $output);
                 if (!empty($output)) {

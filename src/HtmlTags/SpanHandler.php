@@ -12,10 +12,7 @@ use BelKoD\OdtGenerator\StyleHelper;
 class SpanHandler extends TagHandler implements InlineInterface
 {
 
-    public function __construct($factory)
-    {
-        $this->factory = $factory;
-    }
+    public function __construct() { }
 
     /**
      * @inheritDoc

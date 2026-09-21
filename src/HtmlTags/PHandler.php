@@ -10,10 +10,7 @@ use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 class PHandler extends TagHandler implements BlockInterface
 {
 
-    public function __construct($factory)
-    {
-        $this->factory = $factory;
-    }
+    public function __construct() { }
 
     /**
      * @inheritDoc
