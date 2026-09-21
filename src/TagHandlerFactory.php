@@ -64,71 +64,59 @@ class TagHandlerFactory
      */
     public function getHandler(\DOMNode $node, array $options = [])
     {
-        /* Хак, не выводит теги со стилем display:none */
-        if (StyleHelper::display($node) === false) {
-            return new IgnoredTagHandler();
+        $css = [];
+        if ($node->hasAttribute('style')) {
+            $css = StyleHelper::parseCss($node->getAttribute('style'));
+            /* Хак, не выводит теги со стилем display:none */
+            if (!StyleHelper::is_display($css)) {
+                return new IgnoredTagHandler();
+            }
         }
 
+        $options['css'] = $css;
         $tagName = \strtolower($node->tagName);
 
         if ($tagName === 'p') {
-            return new PHandler($this);
+            $tag = new PHandler($this);
         } elseif (\in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
-            return new HeadingHandler($this);
+            $tag = new HeadingHandler($this);
         } elseif (\in_array($tagName, ['ul', 'ol'])) {
-            if (!$this->generator) {
-                throw new \Exception("ListHandler requires OdtGenerator");
-            }
-            $level = Misc::arrayExtract($options, 'level', 0);
-            return new ListHandler($this, $level);
+            $tag = new ListHandler($this, $options);
         } elseif ($tagName === 'span') {
-            return new SpanHandler($this);
+            $tag = new SpanHandler($this);
         // Инлайновые теги форматирования — обрабатываем как span
         } elseif (in_array($tagName, ['b', 'i', 'u', 'strong', 'em', 'small', 'mark', 'del', 'ins', 'sub', 'sup'])) {
-            return new SpanHandler($this);
+            $tag = new SpanHandler($this);
         } elseif ($tagName === 'br') {
-            return new BrHandler();
+            $tag = new BrHandler();
         } elseif ($tagName === 'table') {
-            if (!$this->generator) {
-                throw new \Exception("TableHandler requires OdtGenerator");
-            }
-            return new TableHandler($this);
+            $tag = new TableHandler($this);
         } elseif ($tagName === 'thead') {
-            return new TheadHandler($this);
+            $tag = new TheadHandler($this);
         } elseif ($tagName === 'tbody') {
-            return new TbodyHandler($this);
+            $tag = new TbodyHandler($this);
         } elseif (in_array($tagName, ['td', 'th'])) {
-            $availableCols = Misc::arrayExtract($options, 'availableCols', 999);
-            return new TdHandler($this, $availableCols); // передаём фабрику, availableCols будет переопределён в TrHandler
+            $tag = new TdHandler($this, $options);
         } elseif ($tagName === 'tr') {
             // tr требует maxCols — будет передан из TableHandler
             // Здесь возвращаем заглушку, чтобы не падало, но реально tr обрабатывается только внутри table
-            $maxCols = Misc::arrayExtract($options, 'maxCols', 999);
-            return new TrHandler($this, $maxCols);
-            //return new IgnoredTagHandler();
+            $tag = new TrHandler($this, $options);
+            //$tag = new IgnoredTagHandler();
         } elseif (\in_array($tagName, ['html', 'body'])) {
-            if (!$this->generator) {
-                throw new \Exception("ContainerTagHandler requires OdtGenerator");
-            }
-            return new ContainerTagHandler($this);
+            $tag = new ContainerTagHandler($this);
         } elseif ($tagName === 'np') {
-            return new NpHandler($this);
+            $tag = new NpHandler($this);
         } elseif ($tagName === 'htmlpageheader') {
-            if (!$this->generator) {
-                throw new \Exception("PageHeaderHandler requires OdtGenerator");
-            }
-            return new PageHeaderHandler($this);
+            $tag = new PageHeaderHandler($this);
         } elseif ($tagName === 'htmlpagefooter') {
-            if (!$this->generator) {
-                throw new \Exception("PageFooterHandler requires OdtGenerator");
-            }
-            return new PageFooterHandler($this);
+            $tag = new PageFooterHandler($this);
         } elseif ($tagName === 'img') {
-            // пока не обрабатываем
-            return new ImgHandler($this);
-            //return new IgnoredTagHandler();
+            $tag = new ImgHandler($this);
         } else {
-            return new IgnoredTagHandler();
+            $tag = new IgnoredTagHandler();
         }
+        
+        $tag->setFactory($this);
+        return $tag;
     }
 }
