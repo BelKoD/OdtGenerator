@@ -5,16 +5,13 @@ namespace BelKoD\OdtGenerator\HtmlTags;
 use BelKoD\OdtGenerator\Interfaces\BlockInterface;
 use BelKoD\OdtGenerator\OdtGenerator;
 use BelKoD\OdtGenerator\StyleGenerator;
+use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
  * Генератор списка, в том числе вложенного.
  */
 class ListHandler extends TagHandler implements BlockInterface
 {
-    /**
-     * @var OdtGenerator
-     */
-    private $generator;
     /**
      * @var bool
      */
@@ -28,11 +25,10 @@ class ListHandler extends TagHandler implements BlockInterface
      */
     private $level = 0;
 
-    public function __construct($factory, int $level = 0)
+    public function __construct($factory, array $options=[])
     {
-        $this->generator = $factory->getGenerator();
         $this->factory = $factory;
-        $this->level = $level;
+        $this->level = Misc::arrayExtract($options, 'level', 0);
     }
 
     /**
@@ -124,7 +120,6 @@ class ListHandler extends TagHandler implements BlockInterface
                 if (in_array($tagName, ['ul', 'ol'])) {
                     $nestedList = [];
                     $handler = $this->factory->getHandler($child, ['level' => ($this->level + 1)]);
-                    //$handler = new ListHandler($this->generator, $tagName, $this->factory, ($this->level + 1));
                     $handler->handle($child, $nestedList);
                     if (!empty($nestedList)) {
                         $contentParts[] = implode('', $nestedList);
