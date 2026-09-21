@@ -93,7 +93,7 @@ class TagHandlerFactory
                 $tag =  new $handlerClass($options);
             }
         } else {
-            if ($tagName === 'p') {
+            /*if ($tagName === 'p') {
                 $tag = new PHandler();
             } elseif (\in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
                 $tag = new HeadingHandler();
@@ -130,7 +130,8 @@ class TagHandlerFactory
                 $tag = new ImgHandler();
             } else {
                 $tag = new IgnoredTagHandler();
-            }
+            }*/
+            $tag = new IgnoredTagHandler();
         }
         $tag->setFactory($this);
         return $tag;
