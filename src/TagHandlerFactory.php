@@ -131,7 +131,6 @@ class TagHandlerFactory
             } else {
                 $tag = new IgnoredTagHandler();
             }
-            $tag = new IgnoredTagHandler();
         }
         $tag->setFactory($this);
         return $tag;
