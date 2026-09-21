@@ -21,7 +21,7 @@ class H1Handler extends TagHandler implements BlockInterface
         $content = $this->build($node);
 
         $style = $styleName ? sprintf('text:style-name="%1"', $styleName) : '';
-        $paragraphs[] = sprintf('<text:h text:outline-level="%1" %2>%3</text:h>', 
-            $level, $style, $content);
+        $paragraphs[] = sprintf('<text:h text:outline-level="1" %1>%2</text:h>', 
+            $style, $content);
     }
 }
