@@ -306,10 +306,22 @@ class StyleHelper
     {
         if ($node->hasAttribute('style')) {
             $css = StyleHelper::parseCss($node->getAttribute('style'));
-            $display = Misc::arrayExtract($css, 'display');
-            if ($display == 'none') {
-                return false;
-            }
+            return self::is_display($css);
+        }
+        return true;
+    }
+
+    /**
+     * Возвращает False, если значение стиля display - none.
+     * 
+     * @param array $css
+     * @return bool
+     */
+    public static function is_display(array $css=[]): bool
+    {
+        $display = Misc::arrayExtract($css, 'display');
+        if ($display == 'none') {
+            return false;
         }
         return true;
     }
