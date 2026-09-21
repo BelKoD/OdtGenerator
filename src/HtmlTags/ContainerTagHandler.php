@@ -10,14 +10,7 @@ use BelKoD\OdtGenerator\OdtGenerator;
  */
 class ContainerTagHandler extends TagHandler implements BlockInterface
 {
-    /** @var OdtGenerator */
-    private $generator;
-
-    public function __construct($factory)
-    {
-        $this->factory = $factory;
-        $this->generator = $factory->getGenerator();
-    }
+    public function __construct($factory) { }
 
     /**
      * @inheritDoc
@@ -26,7 +19,7 @@ class ContainerTagHandler extends TagHandler implements BlockInterface
     {
         // Контейнеры (html, body) — не добавляют контент, но обходят детей
         foreach ($node->childNodes as $child) {
-            $this->generator->processNode($child, $paragraphs);
+            $this->factory->getGenerator()->processNode($child, $paragraphs);
         }
     }
 }
