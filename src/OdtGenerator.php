@@ -1,393 +1,291 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BelKoD\OdtGenerator;
 
-use BelKoD\OdtGenerator\HtmlTags\TagHandler;
-use BelKoD\OdtGenerator\Exception\ValidationException;
 use BelKoD\OdtGenerator\Exception\IOException;
+use BelKoD\OdtGenerator\Exception\ValidationException;
 use BelKoD\OdtGenerator\Interfaces\OdtArchiverInterface;
 use BelKoD\OdtGenerator\Interfaces\OdtGeneratorInterface;
-use BelKoD\OdtGenerator\Interfaces\StyleGeneratorInterface;
+use BelKoD\OdtGenerator\Ir\DocumentNode;
+use BelKoD\OdtGenerator\Ir\Node;
+use BelKoD\OdtGenerator\Mapping\DocumentMapper;
+use BelKoD\OdtGenerator\Rendering\OdtRenderer;
 
+/**
+ * Генератор ODT документов из HTML.
+ *
+ * Двухфазный конвейер: HTML -> DOM -> IR (Mapping\DocumentMapper)
+ * -> content.xml (Rendering\OdtRenderer + Rendering\StyleRegistry).
+ *
+ * Обработчики тегов, передающие массивы по ссылке (&$paragraphs), удалены:
+ * маппинг возвращает типизированное дерево IR, рендеринг — готовый XML.
+ * Состояние (стили страниц/таблиц) изолировано в ParseContext и StyleRegistry,
+ * глобальное мутабельное состояние генератора отсутствует.
+ *
+ * Использование не изменилось:
+ *
+ *   $gen = new OdtGenerator($html, 'document.odt');
+ *   $gen->generate();
+ *   file_put_contents('document.odt', $gen->getOutputFile());
+ *   $gen->cleanup(); // опционально: удалить временную директорию
+ */
 class OdtGenerator implements OdtGeneratorInterface
 {
-    /**
-     * @var string HTML-содержимое для обработки
-     */
+    /** @var string HTML-содержимое для обработки */
     private $html;
-    
-    /**
-     * @var string Имя выходного файла
-     */
+
+    /** @var string Полный путь к будущему .odt */
     private $outputPath;
-    
-    /**
-     * @var string Путь к временной директории
-     */
+
+    /** @var string Временная директория */
     private $tempDir;
-    
-    /**
-     * @var TagHandlerFactory Фабрика обработчиков тегов
-     */
-    private $factory;
-    
-    /**
-     * @var array Массив автоматических стилей
-     */
-    private $automaticStyles = [];
-    
-    /**
-     * @var array Индексы существующих автоматических стилей для быстрой проверки
-     */
-    private $automaticStyleIndex = [];
-    
-    /**
-     * @var string|null Граница по умолчанию
-     */
-    private $defaultBorder = null;
-    
-    /**
-     * @var string|null Отступ ячеек по умолчанию
-     */
-    private $defaultCellPadding = null;
-    
-    /**
-     * @var StyleGeneratorInterface Генератор стилей
-     */
+
+    /** @var DocumentMapper Маппер HTML DOM -> IR */
+    private $mapper;
+
+    /** @var StyleGenerator Обёртка content.xml (page layout, дефолтные стили) */
     private $styleGenerator;
-    
-    /**
-     * @var OdtArchiverInterface Архиватор ODT файлов
-     */
+
+    /** @var OdtArchiverInterface Архиватор ODT файлов */
     private $archiver;
-    
-    /**
-     * @var array Массив мастер-стилей
-     */
+
+    /** @var array Глобальные настройки страницы (margins, size, font) */
+    private $globalSettings = [];
+
+    /** @var array Мастер-стили (колонтитулы) в XML-виде, ключи: header|footer */
     private $masterStyles = [];
-    
+
+    /** @var string[] Директории, добавляемые в архив (Pictures для изображений) */
+    private $addedDirs = ['Pictures'];
+
     /**
-     * @var array Массив добавленных директорий
-     */
-    private $added_dir = ['Pictures'];
-    
-    /**
-     * Конструктор
-     *
      * @param string $html HTML-содержимое для обработки
      * @param string $outputFile Имя выходного файла, например "document.odt"
      * @param OdtArchiverInterface|null $archiver Архиватор (по умолчанию создается новый)
-     * @throws IOException
+     * @param DocumentMapper|null $mapper Кастомный маппер IR (для расширения набора тегов)
      * @throws ValidationException
+     * @throws IOException
      */
-    public function __construct(string $html, string $outputFile, OdtArchiverInterface $archiver = null)
-    {
-        // Валидация входных данных
-        if (empty($html)) {
+    public function __construct(
+        string $html,
+        string $outputFile,
+        ?OdtArchiverInterface $archiver = null,
+        ?DocumentMapper $mapper = null
+    ) {
+        if ($html === '') {
             throw new ValidationException('HTML содержимое не может быть пустым');
         }
-        
-        if (empty($outputFile)) {
+
+        if ($outputFile === '') {
             throw new ValidationException('Имя выходного файла не может быть пустым');
         }
-        
+
         if (!preg_match('/\.odt$/i', $outputFile)) {
             throw new ValidationException('Выходной файл должен иметь расширение .odt');
         }
 
-        $this->html = $html;
-
-        // Создаём временную директорию
-        $tempBase = tempnam(sys_get_temp_dir(), 'pk_' . time() . '_');
+        $tempBase = tempnam(sys_get_temp_dir(), 'pk_' . getmypid() . '_');
         if ($tempBase === false) {
             throw new IOException('Не удалось создать временный файл');
         }
-        
-        if (!unlink($tempBase)) {
-            throw new IOException("Не удалось удалить временный файл: {$tempBase}");
-        }
-        
-        if (!mkdir($tempBase, 0755, true)) {
-            throw new IOException("Не удалось создать временную директорию: {$tempBase}");
+
+        if (!unlink($tempBase) || !mkdir($tempBase, 0755, true)) {
+            throw new IOException("Не удалось подготовить временную директорию: {$tempBase}");
         }
 
+        $this->html = $html;
         $this->tempDir = $tempBase;
-        $this->outputPath = $this->tempDir . '/' . $outputFile;
-
+        $this->outputPath = $tempBase . '/' . $outputFile;
+        $this->mapper = $mapper ?? new DocumentMapper();
         $this->styleGenerator = new StyleGenerator($this);
-        $this->factory = new TagHandlerFactory($this, $this->styleGenerator);
         $this->archiver = $archiver ?? new OdtArchiver();
     }
 
     /**
-     * Обработка HTML данных, генерация XML представления и создание файла ODT.
+     * Полный цикл: HTML -> IR -> content.xml -> .odt файл во временной директории.
+     *
+     * Каждый вызов полностью пересобирает документ: реестр стилей создаётся
+     * заново внутри OdtRenderer, поэтому дублирования стилей нет.
      *
      * @return self
      * @throws IOException
      */
     public function generate(): OdtGeneratorInterface
     {
-        $this->automaticStyles = []; // сброс при генерации
-        $this->automaticStyleIndex = []; // сброс индекса стилей
-        $html = str_replace(["\n", "\r"],'', $this->html);
-        $dom = new \DOMDocument('1.0', 'UTF-8');
-        
-        // Обрабатываем ошибки загрузки HTML явно
-        libxml_use_internal_errors(true);
-        $result = $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NODEFDTD);
-        $errors = libxml_get_errors();
-        libxml_clear_errors();
-        
-        if (!$result && !empty($errors)) {
-            $errorMessages = array_map(function($error) {
-                return "Line {$error->line}: {$error->message}";
-            }, $errors);
-            error_log("HTML parsing errors: " . implode("; ", $errorMessages));
-        }
+        $ir = $this->pipeline()->map($this->html);
 
-        $xml = $dom->saveXML();
-        if ($xml === false) {
-            throw new IOException('Не удалось сохранить XML представление документа');
-        }
-        
-        if (file_put_contents($this->tempDir.'/source.xml', $xml) === false) {
-            throw new IOException('Не удалось записать source.xml во временную директорию');
-        }
+        $renderer = new OdtRenderer();
+        $bodyXml = $renderer->render($ir);
+        $autoStylesXml = $renderer->getStyleRegistry()->toXml();
 
-        $paragraphs = [];
-        $this->processChildren($dom->documentElement, $paragraphs);
+        $contentXml = $this->buildContentXml($bodyXml, $autoStylesXml);
 
-        $contentXml = $this->buildContentXml($paragraphs);
-        $this->createODTFile($contentXml);
-        return $this;
-    }
+        $this->writeSourceXml($ir);
+        $this->createOdtFile($contentXml);
 
-    private function processChildren(\DOMNode $parentNode, array &$paragraphs)
-    {
-        //var_dump($parentNode);
-        /*foreach ($parentNode->childNodes as $child) {
-            if ($child->nodeType === XML_ELEMENT_NODE) {
-                $this->processNode($child, $paragraphs);
-            } elseif ($child->nodeType === XML_TEXT_NODE) {
-                // Обработка текста вне тегов (если нужно)
-                $text = trim($child->nodeValue);
-                if ($text !== '') {
-                    $paragraphs[] = '<text:p>' . \htmlspecialchars($text, ENT_NOQUOTES | ENT_XML1, 'UTF-8') . '</text:p>';
-                }
-            }
-            // Рекурсия не нужна — processNode уже вызывает обработчики, которые сами обходят детей (например, TableHandler)
-        }*/
-        $this->processNode($parentNode, $paragraphs);
-    }
-
-    public function setGlobalSettings(array $settings = []): OdtGeneratorInterface
-    {
-        $this->styleGenerator->setGlobalSettings($settings);
-        return $this;
-    }
-
-    public function getGlobalSettings(): array
-    {
-        return $this->styleGenerator->getGlobalSettings();
-    }
-
-    /**
-     * Устанавливает границу по умолчанию
-     *
-     * @param string|null $border Граница (например, "1pt solid #000")
-     * @return self
-     */
-    public function setDefaultBorder($border): OdtGeneratorInterface
-    {
-        $this->defaultBorder = $border;
         return $this;
     }
 
     /**
-     * Возвращает границу по умолчанию
-     *
-     * @return string|null
+     * Возвращает конвейер DOM -> IR (доступен для прототипирования/тестов:
+     * можно получить IR-дерево без сборки файла).
      */
-    public function getDefaultBorder()
+    public function pipeline(): PipelineGenerator
     {
-        return $this->defaultBorder;
+        return new PipelineGenerator($this->mapper);
     }
 
-    /**
-     * Добавляет автоматический стиль
-     *
-     * @param string $styleXml XML-строка стиля
-     * @param string|null $styleName Имя стиля для индексации (опционально)
-     * @return self
-     */
-    public function addAutomaticStyle(string $styleXml, $styleName = null): OdtGeneratorInterface
-    {
-        $this->automaticStyles[] = $styleXml;
-        if ($styleName !== null) {
-            $this->automaticStyleIndex[$styleName] = true;
-        }
-        return $this;
-    }
-    
-    /**
-     * Проверяет, существует ли автоматический стиль с данным именем
-     *
-     * @param string $styleName Имя стиля
-     * @return bool
-     */
-    public function hasAutomaticStyle(string $styleName): bool
-    {
-        return isset($this->automaticStyleIndex[$styleName]);
-    }
+    /* ------------------------------------------------------------------
+     |  Сборка XML и архива
+     '  ---------------------------------------------------------------- */
 
     /**
-     * Устанавливает отступ ячеек по умолчанию
-     *
-     * @param string|null $padding Отступ (например, "0.1cm")
-     * @return self
+     * Собирает content.xml: обёртка от StyleGenerator + тело от OdtRenderer.
+     * Автоматические стили реестра вставляются внутрь <office:automatic-styles>.
      */
-    public function setDefaultCellPadding($padding): OdtGeneratorInterface
+    private function buildContentXml(string $bodyXml, string $autoStylesXml): string
     {
-        $this->defaultCellPadding = $padding;
-        return $this;
-    }
+        $wrapper = $this->styleGenerator->buildDocumentStyles([]);
 
-    /**
-     * Возвращает отступ ячеек по умолчанию
-     *
-     * @return string|null
-     */
-    public function getDefaultCellPadding()
-    {
-        return $this->defaultCellPadding;
-    }
+        $wrapper = str_replace(
+            '</office:automatic-styles>',
+            $autoStylesXml . "\n" . '</office:automatic-styles>',
+            $wrapper
+        );
 
-    /**
-     * Сбрасывает все автоматические стили и индекс
-     */
-    public function clearAutomaticStyles()
-    {
-        $this->automaticStyles = [];
-        $this->automaticStyleIndex = [];
-    }
-    
-    /**
-     * Возвращает массив автоматических стилей
-     *
-     * @return array
-     */
-    public function getAutomaticStyles(): array
-    {
-        return $this->automaticStyles;
-    }
-
-    /**
-     * @return array
-     */
-    public function getMasterStyles(): array
-    {
-        return $this->masterStyles;
-    }
-
-    /**
-     * Устанавливает мастер-стили
-     *
-     * @param string $masterStyles XML-строка мастер-стилей
-     * @param string $type Тип мастер-стиля (например, 'header', 'footer')
-     * @return self
-     */
-    public function setMasterStyles(string $masterStyles, string $type = 'header'):OdtGeneratorInterface
-    {
-        $this->masterStyles[$type][] = $masterStyles;
-        return $this;
-    }
-
-    /**
-     * Устанавливаем архиватор
-     * 
-     * @param OdtArchiverInterface $archiver
-     */
-    public function setArchiver(OdtArchiverInterface $archiver)
-    {
-        $this->archiver = $archiver;
-    }
-    
-    /**
-     * Создает XML документа ODT в виде текстовой строки.
-     *
-     * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
-     * @return string Возвращает XML в виде текстовой строки.
-     */
-    private function buildContentXml(array $paragraphs): string
-    {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<office:document-content ' .
-            'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" ' .
-            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" ' .
-            'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" ' .
-            'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" ' .
-            'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" ' .
-            'xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" ' .
-            'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" ' .
-            'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" ' .
-            'xmlns:xlink="http://www.w3.org/1999/xlink">' .
-            "\n";
-
-        $xml .= $this->styleGenerator->buildDocumentStyles($this->automaticStyles);
+        $xml .= '<office:document-content '
+            . 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+            . 'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" '
+            . 'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
+            . 'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" '
+            . 'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" '
+            . 'xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" '
+            . 'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+            . 'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
+            . 'xmlns:xlink="http://www.w3.org/1999/xlink">' . "\n";
+        $xml .= $wrapper;
         $xml .= '<office:body><office:text text:style-name="Standard">' . "\n";
-
-        foreach ($paragraphs as $p) {
-            if ($p === '') continue;
-            $xml .= $p . "\n";
-        }
-
+        $xml .= $bodyXml . "\n";
         $xml .= '</office:text></office:body>' . "\n";
         $xml .= '</office:document-content>';
 
         return $xml;
     }
 
-    private function buildStylesXml(): string
+    /**
+     * Сохраняет дамп IR-дерева как source.xml (отладочный артефакт в архиве).
+     */
+    private function writeSourceXml(DocumentNode $ir): void
     {
-        // Генерация стилей страницы, таблиц, колонтитулов
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<office:document-styles
-        xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-        xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-        xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
-        xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
-        xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
-        office:version="1.2">';
-
-        $xml .= $this->styleGenerator->buildDocumentStyles($this->automaticStyles);
-
-
-        $xml .= '</office:document-styles>';
-        return $xml;
+        if (file_put_contents($this->tempDir . '/source.xml', $this->dumpIr($ir)) === false) {
+            throw new IOException('Не удалось записать source.xml во временную директорию');
+        }
     }
 
     /**
-     * @return string
+     * Рекурсивный обход IR-дерева: дочерние узлы извлекаются по известным
+     * геттерам каждого типа (у базового Node нет универсального children()).
      */
+    private function dumpIr(Node $node, int $depth = 0): string
+    {
+        $out = str_repeat('  ', $depth) . substr(strrchr('\\' . get_class($node), '\\'), 1) . "\n";
+
+        if ($node instanceof DocumentNode) {
+            $children = $node->getChildren();
+        } elseif ($node instanceof Ir\SpanNode) {
+            $children = $node->getChildren();
+        } elseif ($node instanceof Ir\ParagraphNode || $node instanceof Ir\HeadingNode) {
+            $children = $node->getInlines();
+        } elseif ($node instanceof Ir\ListNode) {
+            $children = $node->getItems();
+        } elseif ($node instanceof Ir\ListItemNode || $node instanceof Ir\CellNode) {
+            $children = $node->getBlocks();
+        } elseif ($node instanceof Ir\TableNode) {
+            $children = $node->getRows();
+        } elseif ($node instanceof Ir\RowNode) {
+            $children = $node->getCells();
+        } else {
+            $children = []; // листовые узлы: TextNode, LineBreakNode
+        }
+
+        foreach ($children as $child) {
+            if ($child instanceof Node) {
+                $out .= $this->dumpIr($child, $depth + 1);
+            }
+        }
+        return $out;
+    }
+
+    private function createOdtFile(string $contentXml): void
+    {
+        $files = [
+            'mimetype' => 'application/vnd.oasis.opendocument.text',
+            'content.xml' => $contentXml,
+            'source.xml' => (string) file_get_contents($this->tempDir . '/source.xml'),
+        ];
+
+        $directories = [];
+        foreach ($this->addedDirs as $target) {
+            $dir = $this->tempDir . '/' . $target;
+            if (is_dir($dir)) {
+                $directories[] = ['source' => $dir, 'target' => $target];
+            }
+        }
+
+        $this->archiver->createArchive($this->outputPath, $files, $directories);
+    }
+
+    /* ------------------------------------------------------------------
+     |  OdtGeneratorInterface
+     '  ---------------------------------------------------------------- */
+
+    public function setGlobalSettings(array $settings = []): OdtGeneratorInterface
+    {
+        $this->globalSettings = $settings;
+        $this->styleGenerator->setGlobalSettings($settings);
+        return $this;
+    }
+
+    public function getGlobalSettings(): array
+    {
+        return $this->globalSettings;
+    }
+
+    /**
+     * @param string|string[] $masterStyles XML-фрагменты колонтитула (массив или строка)
+     */
+    public function setMasterStyles($masterStyles, string $type = 'header'): OdtGeneratorInterface
+    {
+        $this->masterStyles[$type] = (array) $masterStyles;
+        return $this;
+    }
+
+    public function getMasterStyles(): array
+    {
+        return $this->masterStyles;
+    }
+
+    public function setArchiver(OdtArchiverInterface $archiver): OdtGeneratorInterface
+    {
+        $this->archiver = $archiver;
+        return $this;
+    }
+
     public function getTempDir(): string
     {
         return $this->tempDir;
     }
 
-    /**
-     * Возвращает полный путь к созданному ODT-файлу
-     *
-     * @return string
-     */
     public function getOutputPath(): string
     {
         return $this->outputPath;
     }
 
     /**
-     * Возвращает содержимое созданного ODT документа
-     *
-     * @return string|null
+     * @return string|null Бинарное содержимое созданного .odt
      * @throws IOException
      */
     public function getOutputFile()
@@ -396,73 +294,92 @@ class OdtGenerator implements OdtGeneratorInterface
             error_log("ODT file not found: {$this->outputPath}");
             return null;
         }
-        
+
         $content = file_get_contents($this->outputPath);
         if ($content === false) {
-            error_log("Failed to read ODT file: {$this->outputPath}");
             throw new IOException("Не удалось прочитать файл: {$this->outputPath}");
         }
-        
+
         return $content;
     }
 
+    /* ------------------------------------------------------------------
+     |  Методы интерфейса, ставшие производными от StyleRegistry.
+     |  Реальный накопитель автоматических стилей — Rendering\StyleRegistry,
+     |  он живёт внутри OdtRenderer на время одного generate().
+     '  ---------------------------------------------------------------- */
+
     /**
-     * Обрабатывает тег HTML как объект.
-     *
-     * @param \DOMNode $node Нода тега HTML/
-     * @param array $paragraphs Массив "абзацев", построенных на основе HTML.
-     * @return void
+     * @deprecated Автоматические стили создаёт StyleRegistry в фазе рендеринга.
      */
-    public function processNode(\DOMNode $node, array &$paragraphs)
+    public function addAutomaticStyle(string $styleXml, $styleName = null): OdtGeneratorInterface
     {
-        if ($node->nodeType !== \XML_ELEMENT_NODE) {
-            return;
-        }
+        return $this;
+    }
 
-        $tagName = strtolower($node->tagName);
+    /** @deprecated */
+    public function hasAutomaticStyle(string $styleName): bool
+    {
+        return false;
+    }
 
-        /* Тег <br>, если он не находится внутри текстовых тегов, заменяется на пустой <p> */
-        if ($tagName === 'br') {
-            $brContent = '';
-            $paragraphs[] = '<text:p>' . $brContent . '</text:p>';
-            return;
-        }
+    /** @deprecated Границы таблиц задаются CSS/атрибутами, обрабатываемыми маппером. */
+    public function setDefaultBorder($border): OdtGeneratorInterface
+    {
+        return $this;
+    }
 
-        /** @var TagHandler $handler */
-        $handler = $this->factory->getHandler($node);
-        $handler->handle($node, $paragraphs);
+    /** @deprecated */
+    public function getDefaultBorder()
+    {
+        return null;
+    }
+
+    /** @deprecated Отступы ячеек вычисляются на этапе маппинга сетки таблицы. */
+    public function setDefaultCellPadding($padding): OdtGeneratorInterface
+    {
+        return $this;
+    }
+
+    /** @deprecated */
+    public function getDefaultCellPadding()
+    {
+        return null;
+    }
+
+    /** @deprecated */
+    public function clearAutomaticStyles()
+    {
+        return $this;
+    }
+
+    /** @deprecated Всегда пусто: стили живут в StyleRegistry рендерера. */
+    public function getAutomaticStyles(): array
+    {
+        return [];
     }
 
     /**
-     * Создает файл документа ODT.
-     *
-     * @param string $contentXml XML документа ODT в виде текстовой строки.
-     * @return void
-     * @throws IOException
+     * Удаляет временную директорию и (опционально) готовый файл.
+     * Вызовите после того, как забрали getOutputFile()/getOutputPath().
      */
-    private function createODTFile(string $contentXml)
+    public function cleanup(bool $removeOutput = true): void
     {
-        // Подготавливаем файлы для архива
-        $files = [
-            'mimetype' => 'application/vnd.oasis.opendocument.text',
-            'content.xml' => $contentXml,
-            'source.xml' => file_get_contents($this->tempDir.'/source.xml')
-        ];
-
-        // Подготавливаем директории для архива
-        $directories = [];
-        foreach ($this->added_dir as $target) {
-            $addDir = $this->tempDir . '/' . $target;
-            if (is_dir($addDir)) {
-                $directories[] = [
-                    'source' => $addDir,
-                    'target' => $target
-                ];
-            }
+        if (!is_dir($this->tempDir)) {
+            return;
         }
 
-        // Создаем архив с помощью делегированного класса
-        $this->archiver->createArchive($this->outputPath, $files, $directories);
-    }
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->tempDir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
 
+        foreach ($items as $item) {
+            $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+        }
+
+        if ($removeOutput) {
+            @rmdir($this->tempDir);
+        }
+    }
 }
