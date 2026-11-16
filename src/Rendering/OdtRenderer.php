@@ -32,6 +32,12 @@ final class OdtRenderer
     /** @var StyleRegistry */
     private $styles;
 
+    /** @var array<string, bool> Имена использованных таблиц (уникальность в пределах рендера). */
+    private $usedTableNames = [];
+
+    /** @var int Счётчик безымянных таблиц. */
+    private $tableCounter = 0;
+
     public function __construct(?StyleRegistry $styles = null)
     {
         $this->styles = $styles ?? new StyleRegistry();
@@ -133,11 +139,9 @@ final class OdtRenderer
      * Таблицы (полная поддержка вложенности: cell -> blocks -> table -> ...)
      * ---------------------------------------------------------------- */
 
-    private $tableCounter = 0;
-
     private function renderTable(TableNode $node): string
     {
-        $name = 'Table_' . (++$this->tableCounter);
+        $name = $this->uniqueTableName();
         $this->styles->registerTable($name, '');
 
         $xml = '<table:table table:name="' . $name . '">';
@@ -180,6 +184,18 @@ final class OdtRenderer
         }
 
         return $xml . '</table:table-cell>';
+    }
+
+    /**
+     * Уникальное имя таблицы в пределах одного рендера (требование ODF).
+     */
+    private function uniqueTableName(): string
+    {
+        do {
+            $name = 'Table_' . (++$this->tableCounter);
+        } while (isset($this->usedTableNames[$name]));
+        $this->usedTableNames[$name] = true;
+        return $name;
     }
 
     /* ------------------------------------------------------------------
