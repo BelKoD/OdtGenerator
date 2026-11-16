@@ -2,7 +2,6 @@
 
 namespace BelKoD\OdtGenerator;
 
-use BelKoD\OdtGenerator\HtmlTags\IgnoredTagHandler;
 use BelKoD\OdtGenerator\Utils\Misc;
 
 /**
